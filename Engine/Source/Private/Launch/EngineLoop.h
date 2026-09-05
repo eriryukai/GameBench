@@ -2,6 +2,8 @@
 
 #pragma once
 
+class Renderer;
+
 struct EngineLoop
 {
     EngineLoop() = default;
@@ -17,6 +19,8 @@ struct EngineLoop
 private:
     bool m_bIsRunning = true;
     bool m_bIsInitialized = false;
+
+    std::unique_ptr<Renderer> m_Renderer;
 };
 
 extern EngineLoop GEngineLoop;

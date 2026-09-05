@@ -31,6 +31,9 @@ namespace GameBench
             conf.PrecompHeader = "stdafx.h";
             conf.PrecompSource = "stdafx.cpp";
 
+            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\Source\Public");
+            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\Source\Private");
+
             conf.Options.Add(Options.Vc.General.PlatformToolset.v145);
             conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
 
