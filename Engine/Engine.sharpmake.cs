@@ -33,6 +33,17 @@ namespace Mortar
 
             conf.Options.Add(Options.Vc.General.PlatformToolset.v145);
             conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
+
+            InitializePlatform(conf, target);
+        }
+
+        void InitializePlatform(Configuration conf, Target target)
+        {
+            if (target.Platform == Platform.win64)
+            {
+                conf.Defines.Add("MORTAR_PLATFORM_WINDOWS");
+                conf.Options.Add(Options.Vc.Linker.SubSystem.Windows);
+            }
         }
     }
 }
