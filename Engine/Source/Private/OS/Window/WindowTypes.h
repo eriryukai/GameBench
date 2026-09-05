@@ -1,3 +1,5 @@
+// Copyright (c) CreationArt. All Rights Reserved.
+
 #pragma once
 
 #include <cstdint>
