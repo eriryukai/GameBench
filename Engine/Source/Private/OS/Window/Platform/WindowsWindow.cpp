@@ -1,6 +1,9 @@
 // Copyright (c) CreationArt. All Rights Reserved.
 
 #include "stdafx.h"
+
+#if !MORTAR_WINDOW_USE_GLFW && MORTAR_PLATFORM_WINDOWS
+
 #include "WindowsWindow.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -87,3 +90,5 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	}
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
+
+#endif // !MORTAR_WINDOW_USE_GLFW && MORTAR_PLATFORM_WINDOWS

@@ -27,7 +27,7 @@ namespace GameBench
 
             conf.IntermediatePath = @"[project.SharpmakeCsPath]\Intermediate\Build\[project.Name]\[target.Platform]_[conf.Name]";
             conf.TargetPath = @"[project.SharpmakeCsPath]\Binaries\[target.Platform]\[conf.Name]";
-            
+
             conf.PrecompHeader = "stdafx.h";
             conf.PrecompSource = "stdafx.cpp";
 
@@ -44,9 +44,23 @@ namespace GameBench
         {
             if (target.Platform == Platform.win64)
             {
+<<<<<<< HEAD
                 conf.Defines.Add("GAMEBENCH_PLATFORM_WINDOWS");
+=======
+>>>>>>> 376238c ([*/+]Add GLFW as the platform agnostic OS Windowing backend)
                 conf.Options.Add(Options.Vc.Linker.SubSystem.Windows);
             }
+
+            ConfigureGLFW(conf, target);
+        }
+
+        void ConfigureGLFW(Configuration conf, Target target)
+        {
+            conf.Defines.Add("_GLFW_WIN32");
+
+            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\ThirdParty\GLFW\Window\include");
+            conf.LibraryPaths.Add(@"[project.SharpmakeCsPath]\ThirdParty\GLFW\Window\lib-vc2026");
+            conf.LibraryFiles.Add("glfw3_mt.lib");
         }
     }
 }

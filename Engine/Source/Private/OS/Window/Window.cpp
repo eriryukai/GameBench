@@ -3,8 +3,12 @@
 #include "stdafx.h"
 #include "Window.h"
 
-#if defined(MORTAR_PLATFORM_WINDOWS)
+#if MORTAR_WINDOW_USE_GLFW
+#include "Platform/GLFWWindow.h"
+#elif MORTAR_PLATFORM_WINDOWS
 #include "Platform/WindowsWindow.h"
+#else
+#error "No window backend defined."
 #endif
 
 Window::Window() = default;
@@ -18,11 +22,13 @@ bool Window::Create(const WindowSpecification& Spec)
 {
 	m_Spec = Spec;
 
-#if defined(MORTAR_PLATFORM_WINDOWS)
+#if MORTAR_WINDOW_USE_GLFW
+	m_NativeHandle = GLFWWindow::Create(Spec);
+	return m_NativeHandle != nullptr;
+#elif MORTAR_PLATFORM_WINDOWS
 	m_NativeHandle = WindowsWindow::Create(Spec);
 	return m_NativeHandle != nullptr;
 #else
-	#error "No platform defined. Define a platform macro (e.g. MORTAR_PLATFORM_WINDOWS)."
 	return false;
 #endif
 }
@@ -34,7 +40,9 @@ void Window::Destroy()
 		return;
 	}
 
-#if defined(MORTAR_PLATFORM_WINDOWS)
+#if MORTAR_WINDOW_USE_GLFW
+	GLFWWindow::Destroy(m_NativeHandle);
+#elif MORTAR_PLATFORM_WINDOWS
 	WindowsWindow::Destroy(static_cast<HWND>(m_NativeHandle));
 #endif
 	m_NativeHandle = nullptr;
@@ -47,7 +55,9 @@ void Window::PumpMessages()
 		return;
 	}
 
-#if defined(MORTAR_PLATFORM_WINDOWS)
+#if MORTAR_WINDOW_USE_GLFW
+	GLFWWindow::PumpMessages(m_bShouldClose);
+#elif MORTAR_PLATFORM_WINDOWS
 	WindowsWindow::PumpMessages(m_bShouldClose);
 #endif
 }
