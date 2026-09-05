@@ -3,25 +3,25 @@
 
 #ifdef GAMEBENCH_PLATFORM_WINDOWS
 
-extern int GuardedMain(int argc, char** argv);
+extern int GuardedMain(int argc, char** argv, void* PlatformData);
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
 {
-	(void)hInstance;
 	(void)hPrevInstance;
 	(void)lpCmdLine;
 	(void)nCmdShow;
 
+	void* PlatformData = static_cast<void*>(hInstance);
+
 	if (IsDebuggerPresent())
 	{
-		// Debugger attached — let it catch the crash on the exact line.
-		return GuardedMain(__argc, __argv);
+		return GuardedMain(__argc, __argv, PlatformData);
 	}
 
 	int Result;
 	__try
 	{
-		Result = GuardedMain(__argc, __argv);
+		Result = GuardedMain(__argc, __argv, PlatformData);
 	}
 	__except (EXCEPTION_EXECUTE_HANDLER)
 	{
