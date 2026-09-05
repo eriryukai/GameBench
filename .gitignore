@@ -67,3 +67,11 @@ vcpkg_installed/
 # test output & cache
 Testing/
 .cache/
+
+*/Binaries
+*/Intermediate
+
+// Visual Studio 2026
+*.vs
+*.sln
+*.slnx
