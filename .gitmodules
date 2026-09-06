@@ -1,3 +1,6 @@
 [submodule "Engine/ThirdParty/Sharpmake"]
 	path = Engine/ThirdParty/Sharpmake
 	url = https://github.com/ubisoft/Sharpmake.git
+[submodule "Engine/ThirdParty/ShaderMake"]
+	path = Engine/ThirdParty/ShaderMake
+	url = https://github.com/NVIDIA-RTX/ShaderMake.git

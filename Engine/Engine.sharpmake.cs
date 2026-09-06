@@ -38,6 +38,8 @@ namespace GameBench
             conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
 
             InitializePlatform(conf, target);
+            InitializeDependencies(conf, target);
+            BuildShaderPipeline(conf);
         }
 
         void InitializePlatform(Configuration conf, Target target)
@@ -61,6 +63,26 @@ namespace GameBench
             conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\ThirdParty\GLFW\Window\include");
             conf.LibraryPaths.Add(@"[project.SharpmakeCsPath]\ThirdParty\GLFW\Window\lib-vc2026");
             conf.LibraryFiles.Add("glfw3_mt.lib");
+        }
+
+        void InitializeDependencies(Configuration conf, Target target)
+        {
+            conf.ReferencesByNuGetPackage.Add("Microsoft.Direct3D.D3D12", "1.619.5");
+
+            conf.AddPrivateDependency<DirectX12>(target);
+            conf.AddPrivateDependency<ShaderMakeTool>(target);
+        }
+
+        void BuildShaderPipeline(Configuration conf)
+        {
+            /* Compile the HLSL under Engine\Shaders before every build so the runtime
+            * shader libraries can load the compiled blobs from next to the executable:
+            *   Vulkan : "<TargetDir>\Shaders\SPIRV\<Name>_<Entry>.spirv"
+            *   DX12   : "<TargetDir>\Shaders\DXIL\<Name>_<Entry>.dxil"
+            */
+            conf.EventPreBuildDescription = "Compiling shaders with ShaderMake (SPIR-V + DXIL)";
+            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""$(Configuration)"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_$(Configuration)\ShaderMake.exe"" ""$(VULKAN_SDK)\Bin\dxc.exe"" SPIRV");
+            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""$(Configuration)"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_$(Configuration)\ShaderMake.exe"" auto DXIL");
         }
     }
 }
