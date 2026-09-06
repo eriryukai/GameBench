@@ -64,7 +64,7 @@ int EngineLoop::Initialize()
             m_bIsInitialized = false;
             return 1;
         }
-        m_Renderer->Initialize();
+        m_Renderer->Initialize(m_Window.get());
         if (!m_Renderer->IsInitialized())
         {
             //@TODO: Add Log and exceptions

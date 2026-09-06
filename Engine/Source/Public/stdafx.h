@@ -4,6 +4,8 @@
 
 #include <print>
 #include <memory>
+#include <filesystem>
+#include <fstream>
 
 <<<<<<< HEAD
 #ifdef GAMEBENCH_PLATFORM_WINDOWS
