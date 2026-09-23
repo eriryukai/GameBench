@@ -5,7 +5,7 @@ namespace GameBench
     [Generate]
     public class Engine : Project
     {
-        public Engine()
+        public Engine() : base(typeof(GameBenchTarget))
         {
             Name = "Engine";
             SourceRootPath = @"[project.SharpmakeCsPath]\Source";
@@ -13,14 +13,11 @@ namespace GameBench
             IsFileNameToLower = false;
             IsTargetFileNameToLower = false;
 
-            AddTargets(new Target(
-                Platform.win64,
-                DevEnv.vs2026,
-                Optimization.Debug | Optimization.Release));
+            AddTargets(new GameBenchTarget());
         }
 
         [Configure]
-        public void ConfigureAll(Configuration conf, Target target)
+        public void ConfigureAll(Configuration conf, GameBenchTarget target)
         {
             conf.ProjectFileName = "[project.Name]_[target.DevEnv]_[target.Platform]";
             conf.ProjectPath = @"[project.SharpmakeCsPath]\Intermediate\ProjectFiles";
@@ -38,8 +35,9 @@ namespace GameBench
             conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
 
             InitializePlatform(conf, target);
-            InitializeDependencies(conf, target);
+            InitializeDependencies(conf, target.NativeToolTarget);
             BuildShaderPipeline(conf);
+            ConfigureEditor(conf, target);
         }
 
         void InitializePlatform(Configuration conf, Target target)
@@ -67,7 +65,7 @@ namespace GameBench
             conf.ReferencesByNuGetPackage.Add("Microsoft.Direct3D.D3D12", "1.619.5");
 
             conf.AddPrivateDependency<DirectX12>(target);
-            conf.AddPrivateDependency<ShaderMakeTool>(target);
+            conf.AddPrivateDependency<ShaderMakeTool>(target, DependencySetting.OnlyBuildOrder);
         }
 
         void BuildShaderPipeline(Configuration conf)
@@ -78,8 +76,25 @@ namespace GameBench
             *   DX12   : "<TargetDir>\Shaders\DXIL\<Name>_<Entry>.dxil"
             */
             conf.EventPreBuildDescription = "Compiling shaders with ShaderMake (SPIR-V + DXIL)";
-            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""$(Configuration)"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_$(Configuration)\ShaderMake.exe"" ""$(VULKAN_SDK)\Bin\dxc.exe"" SPIRV");
-            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""$(Configuration)"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_$(Configuration)\ShaderMake.exe"" auto DXIL");
+            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Optimization]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Optimization]\ShaderMake.exe"" ""$(VULKAN_SDK)\Bin\dxc.exe"" SPIRV");
+            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Optimization]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Optimization]\ShaderMake.exe"" auto DXIL");
+        }
+
+        void ConfigureEditor(Configuration conf, GameBenchTarget target)
+        {
+            bool editor = target.Mode == BuildMode.Editor;
+            conf.Output = editor ? Configuration.OutputType.Dll : Configuration.OutputType.Exe;
+            conf.Defines.Add(editor ? "WITH_EDITOR=1" : "WITH_EDITOR=0");
+            conf.Defines.Add("NOMINMAX", "WIN32_LEAN_AND_MEAN");
+            conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
+            conf.SourceFilesBuildExcludeRegex.Add(editor ? @"[\\/]Launch[\\/]" : @"[\\/]Editor[\\/]");
+            if (editor)
+                conf.LibraryFiles.Add("d3d11.lib");
+            conf.VcxprojUserFile = new Configuration.VcxprojUserFileSettings
+            {
+                LocalDebuggerCommand = "$(TargetPath)",
+                LocalDebuggerWorkingDirectory = "$(TargetDir)"
+            };
         }
     }
 }
