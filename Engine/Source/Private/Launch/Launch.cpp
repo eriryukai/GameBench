@@ -3,13 +3,8 @@
 #include "stdafx.h"
 #include "EngineLoop.h"
 
-<<<<<<< HEAD
 #if !defined(GAMEBENCH_PLATFORM_WINDOWS)
-#error "No platform defined. Define GAMEBENCH_PLATFORM_WINDOWS"
-=======
-#if !MORTAR_PLATFORM_WINDOWS
-#error "No platform defined. Set MORTAR_PLATFORM_WINDOWS to 1 in PlatformConfig.h"
->>>>>>> 376238c ([*/+]Add GLFW as the platform agnostic OS Windowing backend)
+#error "No platform defined. Define GAMEBENCH_PLATFORM_WINDOWS to 1 in PlatformConfig.h"
 #endif
 
 int GuardedMain(int argc, char** argv, void* PlatformData)

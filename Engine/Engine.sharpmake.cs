@@ -46,10 +46,7 @@ namespace GameBench
         {
             if (target.Platform == Platform.win64)
             {
-<<<<<<< HEAD
                 conf.Defines.Add("GAMEBENCH_PLATFORM_WINDOWS");
-=======
->>>>>>> 376238c ([*/+]Add GLFW as the platform agnostic OS Windowing backend)
                 conf.Options.Add(Options.Vc.Linker.SubSystem.Windows);
             }
 
