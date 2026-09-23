@@ -28,9 +28,6 @@ public:
 	void EndRender();
 
 	bool IsInitialized();
-
-	void AddFrameGraph(std::shared_ptr<FrameGraph> frameGraph);
-
 protected:
 	bool InitializeRHI();
 
@@ -72,7 +69,4 @@ private:
 	HANDLE m_FenceEvent = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
 	UINT64 m_FenceValues[FrameCount] = {};
-
-	// Frame graphs.
-	std::vector<std::shared_ptr<FrameGraph>> m_FrameGraphs;
 };

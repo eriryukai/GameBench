@@ -2,7 +2,6 @@
 
 #include "stdafx.h"
 #include "Renderer/Renderer.h"
-#include "Renderer/FrameGraph.h"
 #include "OS/Window/Window.h"
 
 #include <d3d12.h>
@@ -46,8 +45,6 @@ void Renderer::UnInitialize()
 		WaitForGpu();
 	}
 
-	m_FrameGraphs.clear();
-
 	if (m_FenceEvent)
 	{
 		CloseHandle(m_FenceEvent);
@@ -90,20 +87,6 @@ void Renderer::ExecuteRender()
 	if (!bInitialize)
 	{
 		return;
-	}
-
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_RtvDescriptorSize);
-
-	// Hand each frame graph everything it needs via the backend-agnostic spec.
-	FrameGraphSpecification spec;
-	spec.NativeCommandList = m_CommandList.Get();
-	spec.NativeTargetView = &rtvHandle;
-	spec.Width = m_Window->GetWidth();
-	spec.Height = m_Window->GetHeight();
-
-	for (auto& frameGraph : m_FrameGraphs)
-	{
-		frameGraph->Execute(spec);
 	}
 }
 
@@ -153,12 +136,6 @@ bool Renderer::InitializeRHI()
 	CreateSyncObjects();
 
 	return true;
-}
-
-void Renderer::AddFrameGraph(std::shared_ptr<FrameGraph> frameGraph)
-{
-	frameGraph->SetWindow(m_Window);
-	m_FrameGraphs.push_back(std::move(frameGraph));
 }
 
 void Renderer::Tick()
