@@ -1,7 +1,7 @@
 // Copyright (c) CreationArt. All Rights Reserved.
 #include "stdafx.h"
 
-#ifdef MORTAR_PLATFORM_WINDOWS
+#ifdef GAMEBENCH_PLATFORM_WINDOWS
 
 extern int GuardedMain(int argc, char** argv);
 
@@ -31,4 +31,4 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	return Result;
 }
 
-#endif // MORTAR_PLATFORM_WINDOWS
+#endif // GAMEBENCH_PLATFORM_WINDOWS

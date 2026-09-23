@@ -2,6 +2,6 @@
 
 #include <print>
 
-#ifdef MORTAR_PLATFORM_WINDOWS
+#ifdef GAMEBENCH_PLATFORM_WINDOWS
 #include <windows.h>
 #endif

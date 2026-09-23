@@ -6,11 +6,11 @@ if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
 set "SHARPMAKE_DIR=%ROOT%\Engine\ThirdParty\Sharpmake"
 set "SHARPMAKE_EXE=%SHARPMAKE_DIR%\Sharpmake.Application\bin\Release\net8.0\Sharpmake.Application.exe"
-set "MAIN_SCRIPT=%ROOT%\Mortar.sharpmake.cs"
+set "MAIN_SCRIPT=%ROOT%\GameBench.sharpmake.cs"
 set "RC=0"
 
 if not exist "%SHARPMAKE_EXE%" (
-    echo [Mortar] Building Sharpmake...
+    echo [GameBench] Building Sharpmake...
     where dotnet >nul 2>nul
     if errorlevel 1 (
         echo.
@@ -36,7 +36,7 @@ if not exist "%SHARPMAKE_EXE%" (
     )
 )
 
-echo [Mortar] Generating project files...
+echo [GameBench] Generating project files...
 set "MAIN_SCRIPT_FWD=%MAIN_SCRIPT:\=/%"
 "%SHARPMAKE_EXE%" "/sources('%MAIN_SCRIPT_FWD%')" /verbose
 if errorlevel 1 (
@@ -46,7 +46,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [Mortar] Done. Open Mortar.sln to build.
+echo [GameBench] Done. Open GameBench.sln to build.
 
 :end
 echo.

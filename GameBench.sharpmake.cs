@@ -4,14 +4,14 @@ using Sharpmake;
 
 [module: Sharpmake.Include(@"Engine\Engine.sharpmake.cs")]
 
-namespace Mortar
+namespace GameBench
 {
     [Generate]
-    public class Mortar : Solution
+    public class GameBench : Solution
     {
-        public Mortar()
+        public GameBench()
         {
-            Name = "Mortar";
+            Name = "GameBench";
             IsFileNameToLower = false;
 
             AddTargets(new Target(
@@ -40,7 +40,7 @@ namespace Mortar
                 KitsRootEnum.KitsRoot10,
                 Options.Vc.General.WindowsTargetPlatformVersion.v10_0_26100_0);
 
-            arguments.Generate<Mortar>();
+            arguments.Generate<GameBench>();
         }
     }
 }

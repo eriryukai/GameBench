@@ -3,8 +3,8 @@
 #include "stdafx.h"
 #include "EngineLoop.h"
 
-#if !defined(MORTAR_PLATFORM_WINDOWS)
-#error "No platform defined. Define MORTAR_PLATFORM_WINDOWS"
+#if !defined(GAMEBENCH_PLATFORM_WINDOWS)
+#error "No platform defined. Define GAMEBENCH_PLATFORM_WINDOWS"
 #endif
 
 int GuardedMain(int argc, char** argv)

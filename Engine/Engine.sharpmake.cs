@@ -1,6 +1,6 @@
 using Sharpmake;
 
-namespace Mortar
+namespace GameBench
 {
     [Generate]
     public class Engine : Project
@@ -41,7 +41,7 @@ namespace Mortar
         {
             if (target.Platform == Platform.win64)
             {
-                conf.Defines.Add("MORTAR_PLATFORM_WINDOWS");
+                conf.Defines.Add("GAMEBENCH_PLATFORM_WINDOWS");
                 conf.Options.Add(Options.Vc.Linker.SubSystem.Windows);
             }
         }
