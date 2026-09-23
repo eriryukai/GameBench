@@ -4,12 +4,12 @@
 #include "EngineLoop.h"
 
 #if !defined(GAMEBENCH_PLATFORM_WINDOWS)
-#error "No platform defined. Define GAMEBENCH_PLATFORM_WINDOWS"
+#error "No platform defined. Define GAMEBENCH_PLATFORM_WINDOWS to 1 in PlatformConfig.h"
 #endif
 
-int GuardedMain(int argc, char** argv)
+int GuardedMain(int argc, char** argv, void* PlatformData)
 {
-	int Result = GEngineLoop.PreInitialize(argc, argv);
+	int Result = GEngineLoop.PreInitialize(argc, argv, PlatformData);
 	if (Result != 0)
 	{
 		GEngineLoop.Exit();
@@ -29,4 +29,5 @@ int GuardedMain(int argc, char** argv)
 	}
 
 	GEngineLoop.Exit();
-	return 0;}
+	return 0;
+}
