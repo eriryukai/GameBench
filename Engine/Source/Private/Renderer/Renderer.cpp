@@ -4,7 +4,6 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/ShaderLibrary.h"
 #include "OS/Window/Window.h"
-#include "Renderer/DX12Check.h"
 
 #include <d3d12.h>
 #include <d3dx12/d3dx12.h>
@@ -91,9 +90,16 @@ void Renderer::BeginRender()
 	}
 
 	HRESULT hr = m_CommandAllocators[m_FrameIndex]->Reset();
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
 	hr = m_CommandList->Reset(m_CommandAllocators[m_FrameIndex].Get(), nullptr);
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
 	// Transition the current back buffer PRESENT -> RENDER_TARGET.
 	const CD3DX12_RESOURCE_BARRIER toRenderTarget = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_RenderTargets[m_FrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -135,7 +141,10 @@ void Renderer::Present()
 	m_CommandList->ResourceBarrier(1, &toPresent);
 
 	HRESULT hr = m_CommandList->Close();
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
 	ID3D12CommandList* ppCommandLists[] = { m_CommandList.Get() };
 	m_CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
@@ -152,7 +161,10 @@ void Renderer::Present()
 	{
 		throw std::runtime_error("DX12 device removed/reset during Present.");
 	}
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
 	MoveToNextFrame();
 }
 
@@ -219,15 +231,27 @@ void Renderer::CreateDevice(const LUID* adapterLuid)
 #endif
 
 	HRESULT hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&m_Factory));
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
 	ComPtr<IDXGIAdapter1> hardwareAdapter;
 	if (adapterLuid)
-		CheckDX12(m_Factory->EnumAdapterByLuid(*adapterLuid, IID_PPV_ARGS(&hardwareAdapter)), "Find compositor GPU");
+	{
+		hr = m_Factory->EnumAdapterByLuid(*adapterLuid, IID_PPV_ARGS(&hardwareAdapter));
+		if (FAILED(hr))
+		{
+			return;
+		}
+	}
 	else
 		GetHardwareAdapter(m_Factory.Get(), &hardwareAdapter);
 
 	hr = D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_Device));
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
 }
 
 void Renderer::CreateCommandQueue()
@@ -237,7 +261,10 @@ void Renderer::CreateCommandQueue()
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 
 	HRESULT hr = m_Device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_CommandQueue));
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
 }
 
 void Renderer::CreateSwapChain()
@@ -263,11 +290,15 @@ void Renderer::CreateSwapChain()
 		nullptr,
 		nullptr,
 		&swapChain);
-	CheckDX12(hr, __FUNCTION__);
-	
+	if (FAILED(hr))
+	{
+		return;
+	}
 	hr = swapChain.As(&m_SwapChain);
-	CheckDX12(hr, __FUNCTION__);
-
+	if (FAILED(hr))
+	{
+		return;
+	}
 	m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 }
 
@@ -281,8 +312,10 @@ void Renderer::CreateRenderTargetViews()
 		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
 		HRESULT hr = m_Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap));
-		CheckDX12(hr, __FUNCTION__);
-
+		if (FAILED(hr))
+		{
+			return;
+		}
 		m_RtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
@@ -290,8 +323,10 @@ void Renderer::CreateRenderTargetViews()
 	for (UINT n = 0; n < FrameCount; n++)
 	{
 		HRESULT hr = m_SwapChain->GetBuffer(n, IID_PPV_ARGS(&m_RenderTargets[n]));
-		CheckDX12(hr, __FUNCTION__);
-
+		if (FAILED(hr))
+		{
+			return;
+		}
 		m_Device->CreateRenderTargetView(m_RenderTargets[n].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_RtvDescriptorSize);
 	}
@@ -302,27 +337,40 @@ void Renderer::CreateCommandObjects()
 	for (UINT n = 0; n < FrameCount; n++)
 	{
 		HRESULT hr = m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CommandAllocators[n]));
-		CheckDX12(hr, __FUNCTION__);
+		if (FAILED(hr))
+		{
+			return;
+		}
 	}
 
 	HRESULT hr = m_Device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_CommandAllocators[m_FrameIndex].Get(), nullptr,
 		IID_PPV_ARGS(&m_CommandList));
-	CheckDX12(hr, __FUNCTION__);
-
+	if (FAILED(hr))
+	{
+		return;
+	}
 	hr = m_CommandList->Close();
-	CheckDX12(hr, __FUNCTION__);
+	if (FAILED(hr))
+	{
+		return;
+	}
 }
 
 void Renderer::CreateSyncObjects()
 {
 	HRESULT hr = m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence));
-	CheckDX12(hr, __FUNCTION__);
-
+	if (FAILED(hr))
+	{
+		return;
+	}
 	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	if (m_FenceEvent == nullptr)
 	{
 		hr = HRESULT_FROM_WIN32(GetLastError());
-		CheckDX12(hr, __FUNCTION__);
+		if (FAILED(hr))
+		{
+			return;
+		}
 	}
 
 	WaitForGpu();
@@ -332,10 +380,19 @@ void Renderer::CreateTrianglePipeline()
 {
 	const CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(0, nullptr, 0, nullptr);
 	ComPtr<ID3DBlob> signature;
-	CheckDX12(D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-		&signature, nullptr), "Serialize triangle root signature");
-	CheckDX12(m_Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
-		IID_PPV_ARGS(&m_RootSignature)), "Create triangle root signature");
+	HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+		&signature, nullptr);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	hr = m_Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
+		IID_PPV_ARGS(&m_RootSignature));
+	if (FAILED(hr))
+	{
+		return;
+	}
 
 	const ShaderLibrary shaders;
 	const auto vertexShader = shaders.Load("Triangle", "VSMain");
@@ -355,8 +412,11 @@ void Renderer::CreateTrianglePipeline()
 	pipeline.NumRenderTargets = 1;
 	pipeline.RTVFormats[0] = m_RtvFormat;
 	pipeline.SampleDesc.Count = 1;
-	CheckDX12(m_Device->CreateGraphicsPipelineState(&pipeline, IID_PPV_ARGS(&m_PipelineState)),
-		"Create triangle pipeline");
+	hr = m_Device->CreateGraphicsPipelineState(&pipeline, IID_PPV_ARGS(&m_PipelineState));
+	if (FAILED(hr))
+	{
+		return;
+	}
 }
 
 void Renderer::ResizeSwapChain()
@@ -371,11 +431,15 @@ void Renderer::ResizeSwapChain()
 
 	DXGI_SWAP_CHAIN_DESC desc = {};
 	HRESULT hr = m_SwapChain->GetDesc(&desc);
-	CheckDX12(hr, __FUNCTION__);
-
+	if (FAILED(hr))
+	{
+		return;
+	}
 	hr = m_SwapChain->ResizeBuffers(FrameCount, m_Width, m_Height, m_RtvFormat, desc.Flags);
-	CheckDX12(hr, __FUNCTION__);
-
+	if (FAILED(hr))
+	{
+		return;
+	}
 	m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 	CreateRenderTargetViews();
 }
@@ -384,8 +448,10 @@ void Renderer::WaitForGpu()
 {
 	const UINT64 fenceToWaitFor = m_NextFenceValue++;
 	HRESULT hr = (m_CommandQueue->Signal(m_Fence.Get(), fenceToWaitFor));
-	CheckDX12(hr, __FUNCTION__);
-
+	if (FAILED(hr))
+	{
+		return;
+	}
 	WaitForFence(m_Fence.Get(), fenceToWaitFor);
 }
 
@@ -393,8 +459,10 @@ void Renderer::MoveToNextFrame()
 {
 	const UINT64 currentFenceValue = m_NextFenceValue++;
 	HRESULT hr = m_CommandQueue->Signal(m_Fence.Get(), currentFenceValue);
-	CheckDX12(hr, __FUNCTION__);
-
+	if (FAILED(hr))
+	{
+		return;
+	}
 	m_FenceValues[m_FrameIndex] = currentFenceValue;
 	m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 
@@ -444,10 +512,21 @@ void Renderer::GetHardwareAdapter(IDXGIFactory1* factory, IDXGIAdapter1** ppAdap
 void Renderer::WaitForFence(ID3D12Fence* fence, UINT64 value)
 {
 	if (fence->GetCompletedValue() == UINT64_MAX)
-		CheckDX12(m_Device->GetDeviceRemovedReason(), "GPU device removed");
+	{
+		HRESULT hr = m_Device->GetDeviceRemovedReason();
+		if (FAILED(hr))
+		{
+			return;
+		}
+	}
 	if (fence->GetCompletedValue() >= value)
 		return;
-	CheckDX12(fence->SetEventOnCompletion(value, m_FenceEvent), "Set fence completion");
+	HRESULT hr = fence->SetEventOnCompletion(value, m_FenceEvent);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
 	if (WaitForSingleObject(m_FenceEvent, 5000) != WAIT_OBJECT_0)
 		throw std::runtime_error("Timed out waiting for the GPU.");
 }

@@ -1,7 +1,6 @@
 // Copyright (c) CreationArt. All Rights Reserved.
 #include "stdafx.h"
 #include "Renderer/Renderer.h"
-#include "Renderer/DX12Check.h"
 #include <d3dx12/d3dx12.h>
 
 #if WITH_EDITOR
@@ -14,16 +13,35 @@ void Renderer::InitializeViewport(const LUID& adapterLuid)
 	// Avalonia's ANGLE backend imports keyed-mutex D3D11 images, not D3D12 fences.
 	// This device only copies the DX12 result into the compositor's shared image.
 	Microsoft::WRL::ComPtr<IDXGIAdapter1> adapter;
-	CheckDX12(m_Factory->EnumAdapterByLuid(adapterLuid, IID_PPV_ARGS(&adapter)), "Find viewport copy GPU");
+	HRESULT hr = m_Factory->EnumAdapterByLuid(adapterLuid, IID_PPV_ARGS(&adapter));
+	if (FAILED(hr))
+	{
+		return;
+	}
 	Microsoft::WRL::ComPtr<ID3D11Device> copyDevice;
-	CheckDX12(D3D11CreateDevice(adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
+	hr = D3D11CreateDevice(adapter.Get(), D3D_DRIVER_TYPE_UNKNOWN, nullptr,
 		D3D11_CREATE_DEVICE_BGRA_SUPPORT, nullptr, 0, D3D11_SDK_VERSION,
-		&copyDevice, nullptr, &m_ViewportContext), "Create viewport copy device");
-	CheckDX12(copyDevice.As(&m_ViewportDevice), "Query viewport copy device");
+		&copyDevice, nullptr, &m_ViewportContext);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	hr = copyDevice.As(&m_ViewportDevice);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
 	D3D12_DESCRIPTOR_HEAP_DESC heap{};
 	heap.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
 	heap.NumDescriptors = FrameCount;
-	CheckDX12(m_Device->CreateDescriptorHeap(&heap, IID_PPV_ARGS(&m_RtvHeap)), "Create viewport RTV heap");
+	hr = m_Device->CreateDescriptorHeap(&heap, IID_PPV_ARGS(&m_RtvHeap));
+	if (FAILED(hr))
+	{
+		return;
+	}
+
 	m_RtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(heap.Type);
 	CreateCommandObjects();
 	CreateSyncObjects();
@@ -63,15 +81,28 @@ void Renderer::ResetViewport(uint32_t width, uint32_t height)
 	for (UINT i = 0; i < FrameCount; ++i)
 	{
 		auto& frame = m_ViewportTargets[i];
-		CheckDX12(m_Device->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_SHARED, &desc,
-			D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_RenderTargets[i])), "Create shared viewport texture");
+		HRESULT hr = m_Device->CreateCommittedResource(&heap, D3D12_HEAP_FLAG_SHARED, &desc,
+			D3D12_RESOURCE_STATE_COMMON, nullptr, IID_PPV_ARGS(&m_RenderTargets[i]));
+		if (FAILED(hr))
+		{
+			return;
+		}
+
 		m_Device->CreateRenderTargetView(m_RenderTargets[i].Get(), nullptr, rtv);
 		rtv.Offset(1, m_RtvDescriptorSize);
 		HANDLE sourceHandle = nullptr;
-		CheckDX12(m_Device->CreateSharedHandle(m_RenderTargets[i].Get(), nullptr, GENERIC_ALL, nullptr, &sourceHandle), "Share DX12 render target");
-		HRESULT opened = m_ViewportDevice->OpenSharedResource1(sourceHandle, IID_PPV_ARGS(&frame.Source));
+		hr = m_Device->CreateSharedHandle(m_RenderTargets[i].Get(), nullptr, GENERIC_ALL, nullptr, &sourceHandle);
+		if (FAILED(hr))
+		{
+			return;
+		}
+
+		hr = m_ViewportDevice->OpenSharedResource1(sourceHandle, IID_PPV_ARGS(&frame.Source));
 		CloseHandle(sourceHandle);
-		CheckDX12(opened, "Open DX12 render target for GPU copy");
+		if (FAILED(hr))
+		{
+			return;
+		}
 
 		D3D11_TEXTURE2D_DESC shared{};
 		shared.Width = width;
@@ -82,12 +113,31 @@ void Renderer::ResetViewport(uint32_t width, uint32_t height)
 		shared.Usage = D3D11_USAGE_DEFAULT;
 		shared.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
 		shared.MiscFlags = D3D11_RESOURCE_MISC_SHARED_NTHANDLE | D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
-		CheckDX12(m_ViewportDevice->CreateTexture2D(&shared, nullptr, &frame.SharedImage), "Create keyed viewport image");
-		CheckDX12(frame.SharedImage.As(&frame.Mutex), "Query viewport keyed mutex");
+		hr = m_ViewportDevice->CreateTexture2D(&shared, nullptr, &frame.SharedImage);
+		if (FAILED(hr))
+		{
+			return;
+		}
+
+		hr = frame.SharedImage.As(&frame.Mutex);
+		if (FAILED(hr))
+		{
+			return;
+		}
+
 		Microsoft::WRL::ComPtr<IDXGIResource1> resource;
-		CheckDX12(frame.SharedImage.As(&resource), "Query shared viewport resource");
-		CheckDX12(resource->CreateSharedHandle(nullptr, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
-			nullptr, &frame.ImageHandle), "Export keyed viewport image");
+		hr = frame.SharedImage.As(&resource);
+		if (FAILED(hr))
+		{
+			return;
+		}
+
+		hr = resource->CreateSharedHandle(nullptr, DXGI_SHARED_RESOURCE_READ | DXGI_SHARED_RESOURCE_WRITE,
+			nullptr, &frame.ImageHandle);
+		if (FAILED(hr))
+		{
+			return;
+		}
 	}
 }
 
@@ -96,7 +146,11 @@ bool Renderer::RenderViewport(EditorViewportFrame& output)
 	if (!bInitialize || !m_EditorViewport || !m_RenderTargets[m_FrameIndex])
 		throw std::runtime_error("The viewport has no render target.");
 	auto& frame = m_ViewportTargets[m_FrameIndex];
-	CheckDX12(m_Device->GetDeviceRemovedReason(), "Viewport GPU");
+	HRESULT hr = m_Device->GetDeviceRemovedReason();
+	if (FAILED(hr))
+	{
+		return FALSE;
+	}
 	// Key 0 belongs to the producer; key 1 belongs to Avalonia. Nonblocking acquisition
 	// also prevents a failed/abandoned presentation from hanging the engine's GPU queue.
 	HRESULT acquired = frame.Mutex->AcquireSync(0, 0);
@@ -128,8 +182,18 @@ void Renderer::SubmitViewportFrame()
 	WaitForGpu();
 	m_ViewportContext->CopyResource(frame.SharedImage.Get(), frame.Source.Get());
 	m_ViewportContext->Flush();
-	CheckDX12(m_ViewportDevice->GetDeviceRemovedReason(), "Viewport copy device");
-	CheckDX12(frame.Mutex->ReleaseSync(1), "Release viewport image to compositor");
+	HRESULT hr = m_ViewportDevice->GetDeviceRemovedReason();
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	hr = frame.Mutex->ReleaseSync(1);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
 	m_FrameIndex = (m_FrameIndex + 1) % FrameCount;
 }
 #endif
