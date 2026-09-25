@@ -39,11 +39,11 @@ internal sealed class EngineViewportControl : Grid
     {
         _viewModel = viewModel;
         _update = UpdateFrame;
-        Background = Brush.Parse("#080D13");
+        Background = Brush.Parse("#0F0F0F");
         Children.Add(_imageHost);
         _statusText = new TextBlock
         {
-            Text = "Starting renderer...", Foreground = Brush.Parse("#B8C7D9"),
+            Text = "Starting renderer...", Foreground = Brush.Parse("#C0C0C0"),
             FontSize = 12, TextWrapping = TextWrapping.Wrap, MaxWidth = 620
         };
         _statusBadge = new Border
@@ -51,7 +51,7 @@ internal sealed class EngineViewportControl : Grid
             HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Left,
             VerticalAlignment = Avalonia.Layout.VerticalAlignment.Bottom,
             Margin = new Thickness(12), Padding = new Thickness(10, 6),
-            Background = Brush.Parse("#101722"), BorderBrush = Brush.Parse("#26384D"),
+            Background = Brush.Parse("#323232"), BorderBrush = Brush.Parse("#1A1A1A"),
             BorderThickness = new Thickness(1), Child = _statusText
         };
         Children.Add(_statusBadge);

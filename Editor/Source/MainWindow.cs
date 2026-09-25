@@ -1,7 +1,10 @@
 #nullable enable
 using System;
 using Avalonia;
+using Avalonia.Animation;
+using Avalonia.Animation.Easings;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Input;
 using Avalonia.Layout;
 using Avalonia.Media;
@@ -13,12 +16,11 @@ namespace GameBench.Editor;
 internal sealed class MainWindow : Window
 {
     private readonly MainWindowViewModel _viewModel;
-    private readonly TextBlock _statusText;
-    private DockControl _dockControl = null!;
     private bool _closing;
     private bool _allowClose;
     private Border _chromeRoot = null!;
     private Button _maximizeButton = null!;
+    private DockControl _dockControl = null!;
 
     public MainWindow(MainWindowViewModel viewModel)
     {
@@ -40,18 +42,7 @@ internal sealed class MainWindow : Window
         // Aero-snap and maximize-to-work-area still behave natively.
         WindowDecorations = Avalonia.Controls.WindowDecorations.BorderOnly;
 
-        _statusText = new TextBlock
-        {
-            Text = "Ready",
-            VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(12, 0),
-            Foreground = EditorTheme.TextMuted,
-            FontSize = 12
-        };
-        _viewModel.StatusChanged += status => _statusText.Text = status;
-
-
-        var dockControl = _dockControl = new DockControl
+        _dockControl = new DockControl
         {
             Factory = viewModel.Factory,
             Layout = viewModel.Layout,
@@ -60,21 +51,23 @@ internal sealed class MainWindow : Window
             IsDockingEnabled = true
         };
 
+        EditorViewportMenu.Attach(_dockControl, viewModel.EditorFactory);
+
         var root = new DockPanel { LastChildFill = true };
 
-        var header = CreateHeader();
-        DockPanel.SetDock(header, Avalonia.Controls.Dock.Top);
-        root.Children.Add(header);
+        var titleBar = CreateTitleBar();
+        DockPanel.SetDock(titleBar, Avalonia.Controls.Dock.Top);
+        root.Children.Add(titleBar);
 
-        var toolbar = CreateToolbar();
-        DockPanel.SetDock(toolbar, Avalonia.Controls.Dock.Top);
-        root.Children.Add(toolbar);
+        var mainToolbar = CreateMainToolbar();
+        DockPanel.SetDock(mainToolbar, Avalonia.Controls.Dock.Top);
+        root.Children.Add(mainToolbar);
 
         root.Children.Add(new Border
         {
             Background = EditorTheme.WindowBackground,
             Padding = new Thickness(4, 4, 4, 0),
-            Child = dockControl
+            Child = _dockControl
         });
 
         // When maximized with an extended client area, Windows oversizes the window by the
@@ -135,19 +128,26 @@ internal sealed class MainWindow : Window
             Icon = new WindowIcon(logo);
     }
 
-    // --- Header: brand mark + menu --------------------------------------------------
+    // --- Title bar: brand, menubar, notifications and caption -----------------------
 
-    private Control CreateHeader()
+    // Hazelnut's UI_DrawTitlebar: a 57px bar filled with titlebar, overlaid by a
+    // 380px-wide horizontal gradient from the running-state colour back to titlebar.
+    private const double TitleBarHeight = 57.0;
+    private const double TitleBarGradientWidth = 380.0;
+
+    private Border _stateGradient = null!;
+
+    private Control CreateTitleBar()
     {
         var brand = new StackPanel
         {
             Orientation = Orientation.Horizontal,
             Spacing = 8,
             VerticalAlignment = VerticalAlignment.Center,
-            Margin = new Thickness(10, 0, 8, 0),
+            Margin = new Thickness(14, 0, 8, 0),
             Children =
             {
-                EditorTheme.ImageIcon("Editor/Hazel-IconLogo-2023.png", EditorIcons.ContentBrowser.Cube, EditorTheme.Accent, 18),
+                CreateBrandMark(),
                 new TextBlock
                 {
                     Text = "GAMEBENCH",
@@ -167,26 +167,85 @@ internal sealed class MainWindow : Window
         var windowControls = CreateWindowControls();
         DockPanel.SetDock(windowControls, Avalonia.Controls.Dock.Right);
 
-        // Transparent fill that carries the move/maximize gestures for the empty title-bar
-        // space between the menu and the window buttons.
+        // Stands in for the old "Ready" status label: status messages collect here as a
+        // log behind the bell instead of overwriting a single line of text.
+        var notifications = CreateNotificationsButton();
+        DockPanel.SetDock(notifications, Avalonia.Controls.Dock.Right);
+
+        // Transparent fill that carries the move/maximize gestures for the empty
+        // title-bar space between the menu and the action row.
         var dragSpacer = new Border { Background = Brushes.Transparent };
 
-        var bar = new DockPanel
+        var content = new DockPanel
         {
             LastChildFill = true,
-            Background = EditorTheme.TitleBar,
-            Children = { brand, menu, windowControls, dragSpacer }
+            Children = { brand, menu, windowControls, notifications, dragSpacer }
         };
 
         EnableTitleBarDrag(brand);
         EnableTitleBarDrag(dragSpacer);
 
+        // Behind the content and hit-test transparent so it never eats a click.
+        _stateGradient = new Border
+        {
+            Width = TitleBarGradientWidth,
+            HorizontalAlignment = HorizontalAlignment.Left,
+            VerticalAlignment = VerticalAlignment.Stretch,
+            IsHitTestVisible = false,
+            Background = TitleBarStateGradient(EditorTheme.TitleBarStopColor),
+            Transitions = new Transitions
+            {
+                new BrushTransition
+                {
+                    Property = Border.BackgroundProperty,
+                    Duration = TimeSpan.FromMilliseconds(150),
+                    Easing = new LinearEasing()
+                }
+            }
+        };
+
         return new Border
         {
+            Height = TitleBarHeight,
+            Background = EditorTheme.TitleBar,
             BorderBrush = EditorTheme.BorderSubtle,
             BorderThickness = new Thickness(0, 0, 0, 1),
-            Child = bar
+            Child = new Panel { Children = { _stateGradient, content } }
         };
+    }
+
+    private static Control CreateBrandMark()
+    {
+        Bitmap? logo = EditorTheme.LoadBitmap("Editor/HazelLogo_Light.png");
+        if (logo == null)
+            return EditorTheme.ImageIcon("Editor/HazelLogo_Light.png", "", EditorTheme.Accent, 24);
+
+        return new Image
+        {
+            Source = logo,
+            Width = 38,
+            Height = 45,
+            Stretch = Stretch.Uniform,
+            Margin = new Thickness(0),
+            VerticalAlignment = VerticalAlignment.Center
+        };
+    }
+
+    private static IBrush TitleBarStateGradient(Color state) => new LinearGradientBrush
+    {
+        StartPoint = new RelativePoint(0, 0.5, RelativeUnit.Relative),
+        EndPoint = new RelativePoint(1, 0.5, RelativeUnit.Relative),
+        GradientStops =
+        {
+            new GradientStop(state, 0.0),
+            new GradientStop(EditorTheme.TitleBarColor, 1.0)
+        }
+    };
+
+    private void SetTitleBarState(bool playing)
+    {
+        _stateGradient.Background = TitleBarStateGradient(
+            playing ? EditorTheme.TitleBarPlayColor : EditorTheme.TitleBarStopColor);
     }
 
     // --- Custom window caption (min / max / close) -----------------------------------
@@ -216,7 +275,7 @@ internal sealed class MainWindow : Window
         {
             Content = glyph,
             Width = 46,
-            Height = 32,
+            Height = TitleBarHeight,
             HorizontalContentAlignment = HorizontalAlignment.Center,
             VerticalContentAlignment = VerticalAlignment.Center,
             Classes = { "caption" }
@@ -281,183 +340,183 @@ internal sealed class MainWindow : Window
         return new Grid { Width = 12, Height = 12, Children = { back, front } };
     }
 
-    private static MenuItem MakeMenuItem(string text, string iconPath, IBrush? iconColor = null)
-    {
-        var header = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 8,
-            Children =
-            {
-                EditorIcons.CreatePath(iconPath, iconColor ?? EditorTheme.Text, 16),
-                new TextBlock { Text = text, VerticalAlignment = VerticalAlignment.Center }
-            }
-        };
-        return new MenuItem { Header = header };
-    }
-
     private Menu CreateMenu()
     {
-        var saveScene = MakeMenuItem("Save Scene", EditorIcons.Common.Save);
-        saveScene.IsEnabled = false;
-        ToolTip.SetTip(saveScene, "Ctrl+S");
-
-        var saveAll = MakeMenuItem("Save All", EditorIcons.Common.SaveAll, EditorTheme.Accent);
-        saveAll.IsEnabled = false;
-
-        var projectSettings = MakeMenuItem("Project Settings...", EditorIcons.Common.Settings);
-        projectSettings.IsEnabled = false;
-
-        var editorSettings = MakeMenuItem("Editor Settings...", EditorIcons.Common.Settings, EditorTheme.Accent);
-        editorSettings.IsEnabled = false;
-
-        var switchProject = MakeMenuItem("Switch Project...", EditorIcons.ContentBrowser.FolderOpen, EditorTheme.Accent);
-        switchProject.IsEnabled = false;
-
-        var exit = MakeMenuItem("Exit", EditorIcons.Common.Close);
+        var exit = new MenuItem { Header = "Exit" };
         exit.Click += (_, _) => Close();
 
-        var file = new MenuItem
-        {
-            Header = "_File",
-            ItemsSource = new object[]
-            {
-                saveScene,
-                saveAll,
-                new Separator(),
-                projectSettings,
-                editorSettings,
-                new Separator(),
-                switchProject,
-                exit
-            }
-        };
-
-        var resetLayout = new MenuItem { Header = "Reset Layout" };
-        resetLayout.Click += async (_, _) =>
-        {
-            resetLayout.IsEnabled = false;
-            try
-            {
-                await _viewModel.ResetLayoutAsync();
-                _dockControl.Factory = _viewModel.Factory;
-                _dockControl.Layout = _viewModel.Layout;
-            }
-            finally { resetLayout.IsEnabled = true; }
-        };
-        var view = new MenuItem { Header = "_View", ItemsSource = new object[] { resetLayout } };
+        // No icon: the viewport entry lives as plain text, unlike the titlebar's old
+        // monitor button which was dropped when it moved into this dropdown.
+        var viewport = new MenuItem { Header = "_Viewport" };
+        viewport.Click += (_, _) => _viewModel.ShowViewport();
 
         return new Menu
         {
             Background = Brushes.Transparent,
             VerticalAlignment = VerticalAlignment.Center,
-            ItemsSource = new object[] { file, view }
-        };
-    }
-
-    // --- Toolbar: play controls + project --------------------------------------------
-
-    private Control CreateToolbar()
-    {
-        var pieButton = ActionButton("Play", "Editor/Viewport/Play.png", EditorIcons.Toolbar.Play, "success");
-        var stopButton = ActionButton("Stop", "Editor/Viewport/Stop.png", EditorIcons.Toolbar.Stop, "danger");
-        var runtimeButton = ActionButton("Launch", "Editor/Viewport/Simulate.png", EditorIcons.Toolbar.Play, "accent");
-        var saveButton = ActionButton("Save", "Editor/Viewport/Save.png", EditorIcons.Common.Save, "accent");
-        var saveAllButton = ActionButton("All", "Editor/Viewport/SaveAll.png", EditorIcons.Common.SaveAll, "accent");
-        var undoButton = ActionButton("Undo", "Editor/Viewport/Undo.png", EditorIcons.Common.Undo, "accent");
-        var redoButton = ActionButton("Redo", "Editor/Viewport/Redo.png", EditorIcons.Common.Redo, "accent");
-        foreach (var button in new[] { pieButton, stopButton, runtimeButton, saveButton, saveAllButton, undoButton, redoButton })
-        {
-            SetEnabled(button, false);
-            ToolTip.SetTip(button, "Available when scenes and projects are supported");
-        }
-
-        static Border Separator() => new()
-        {
-            Width = 1,
-            Height = 22,
-            Background = EditorTheme.Border,
-            Margin = new Thickness(10, 0)
-        };
-
-        var projectChip = new Border
-        {
-            Background = EditorTheme.Surface,
-            BorderBrush = EditorTheme.Border,
-            BorderThickness = new Thickness(1),
-            CornerRadius = new CornerRadius(4),
-            Padding = new Thickness(8, 3),
-            Child = new StackPanel
+            ItemsSource = new object[]
             {
-                Orientation = Orientation.Horizontal,
-                Spacing = 6,
-                Children =
-                {
-                    EditorTheme.ImageIcon("Editor/Generic/Gear.png", EditorIcons.Common.Settings, EditorTheme.Accent, 14),
-                    new TextBlock
-                    {
-                        Text = _viewModel.ProjectName,
-                        VerticalAlignment = VerticalAlignment.Center,
-                        FontWeight = FontWeight.SemiBold,
-                        FontSize = 12,
-                        Foreground = EditorTheme.TextBright
-                    }
-                }
+                new MenuItem { Header = "_File", ItemsSource = new object[] { exit } },
+                new MenuItem { Header = "_Window", ItemsSource = new object[] { viewport } }
             }
         };
-
-        var leftGroup = new StackPanel
-        {
-            Orientation = Orientation.Horizontal,
-            Spacing = 6,
-            VerticalAlignment = VerticalAlignment.Center,
-            Children = { saveButton, saveAllButton, undoButton, redoButton, Separator(), pieButton, stopButton, Separator(), runtimeButton }
-        };
-
-        var toolbar = new DockPanel { LastChildFill = true };
-        DockPanel.SetDock(leftGroup, Avalonia.Controls.Dock.Left);
-        DockPanel.SetDock(projectChip, Avalonia.Controls.Dock.Right);
-        DockPanel.SetDock(_statusText, Avalonia.Controls.Dock.Right);
-        toolbar.Children.Add(leftGroup);
-        toolbar.Children.Add(projectChip);
-        toolbar.Children.Add(_statusText);
-
-        return new Border
-        {
-            Background = EditorTheme.BackgroundDark,
-            Padding = new Thickness(8, 5),
-            BorderBrush = EditorTheme.BorderSubtle,
-            BorderThickness = new Thickness(0, 0, 0, 1),
-            Child = toolbar
-        };
     }
 
-    private static Button ActionButton(string label, string iconPath, string fallback, string cssClass)
+    // --- Main toolbar: transport on its own row under the title bar -----------------
+
+    private const double MainToolbarHeight = 44.0;
+
+    private Control CreateMainToolbar() => new Border
+    {
+        Height = MainToolbarHeight,
+        Background = EditorTheme.WindowBackground,
+        BorderBrush = EditorTheme.BorderSubtle,
+        BorderThickness = new Thickness(0, 0, 0, 1),
+        Padding = new Thickness(12, 0),
+        Child = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            HorizontalAlignment = HorizontalAlignment.Center,
+            VerticalAlignment = VerticalAlignment.Center,
+            Spacing = 8,
+            Children = { CreatePlayToggleButton() }
+        }
+    };
+
+    // --- Transport: play / stop toggle -----------------------------------------------
+
+    private bool _isPlaying;
+
+    private Button CreatePlayToggleButton()
     {
         var button = new Button
         {
-            Content = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                Spacing = 6,
-                VerticalAlignment = VerticalAlignment.Center,
-                Children =
-                {
-                    EditorTheme.ImageIcon(iconPath, fallback, Brushes.White, 14),
-                    new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center }
-                }
-            },
             VerticalAlignment = VerticalAlignment.Center,
-            Cursor = new Cursor(StandardCursorType.Hand)
+            Cursor = new Cursor(StandardCursorType.Hand),
+            Classes = { "toolbar" }
         };
-        button.Classes.Add(cssClass);
+
+        void Render()
+        {
+            button.Content = _isPlaying
+                ? ToolbarContent(
+                    EditorTheme.TintedIcon("Editor/Viewport/Stop.png", EditorIcons.Toolbar.Stop, EditorTheme.TextColor, 14),
+                    "Stop")
+                : ToolbarContent(
+                    EditorTheme.TintedIcon("Editor/Viewport/Play.png", EditorIcons.Toolbar.Play, EditorTheme.TextColor, 14),
+                    "Play");
+            ToolTip.SetTip(button, _isPlaying ? "Stop" : "Play the game scene");
+        }
+
+        Render();
+        button.Click += (_, _) =>
+        {
+            _isPlaying = !_isPlaying;
+            SetTitleBarState(_isPlaying);
+            Render();
+        };
         return button;
     }
 
-    private static void SetEnabled(Button button, bool enabled)
+    private static StackPanel ToolbarContent(Control icon, string label) => new()
     {
-        button.IsEnabled = enabled;
-        button.Opacity = enabled ? 1.0 : 0.45;
+        Orientation = Orientation.Horizontal,
+        Spacing = 6,
+        VerticalAlignment = VerticalAlignment.Center,
+        Children =
+        {
+            icon,
+            new TextBlock { Text = label, VerticalAlignment = VerticalAlignment.Center }
+        }
+    };
+
+    // --- Notifications ----------------------------------------------------------------
+
+    private Button CreateNotificationsButton()
+    {
+        var count = new TextBlock
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            FontSize = 11,
+            FontWeight = FontWeight.Bold,
+            Foreground = EditorTheme.Accent,
+            IsVisible = false
+        };
+
+        var button = new Button
+        {
+            VerticalAlignment = VerticalAlignment.Center,
+            Cursor = new Cursor(StandardCursorType.Hand),
+            Classes = { "toolbar" },
+            Content = new StackPanel
+            {
+                Orientation = Orientation.Horizontal,
+                VerticalAlignment = VerticalAlignment.Center,
+                Children = { EditorIcons.CreatePath(EditorIcons.Notifications.Bell, EditorTheme.Text, 14), count }
+            }
+        };
+        ToolTip.SetTip(button, "Notifications");
+
+        var empty = new TextBlock
+        {
+            Text = "No notifications",
+            FontSize = 12,
+            Foreground = EditorTheme.TextMuted
+        };
+
+        var list = new ItemsControl
+        {
+            ItemsSource = _viewModel.Notifications,
+            ItemTemplate = new FuncDataTemplate<string>((text, _) => new TextBlock
+            {
+                Text = text,
+                TextWrapping = TextWrapping.Wrap,
+                Margin = new Thickness(2, 1)
+            })
+        };
+
+        var scroll = new ScrollViewer { Content = list, MaxHeight = 320 };
+
+        var clear = new Button { Classes = { "toolbar" }, Content = "Clear" };
+        clear.Click += (_, _) => _viewModel.Notifications.Clear();
+
+        void Refresh()
+        {
+            int total = _viewModel.Notifications.Count;
+            count.Text = total > 0 ? total.ToString() : string.Empty;
+            count.IsVisible = total > 0;
+            empty.IsVisible = total == 0;
+            scroll.IsVisible = total > 0;
+            clear.IsVisible = total > 0;
+        }
+
+        _viewModel.Notifications.CollectionChanged += (_, _) => Refresh();
+        Refresh();
+
+        var flyout = new Flyout
+        {
+            Placement = PlacementMode.BottomEdgeAlignedRight,
+            Content = new StackPanel
+            {
+                Width = 320,
+                Spacing = 6,
+                Children =
+                {
+                    new TextBlock
+                    {
+                        Text = "Notifications",
+                        FontSize = 11,
+                        FontWeight = FontWeight.Bold,
+                        Foreground = EditorTheme.TextMuted
+                    },
+                    empty,
+                    scroll,
+                    clear
+                }
+            }
+        };
+        button.Flyout = flyout;
+        return button;
     }
 
 }

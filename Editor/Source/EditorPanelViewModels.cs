@@ -36,7 +36,3 @@ internal sealed class ViewportPanelViewModel : Document
     }
 }
 
-internal sealed class SceneHierarchyPanelViewModel : Tool { }
-internal sealed class DetailsPanelViewModel : Tool { }
-internal sealed class ContentBrowserPanelViewModel : Tool { }
-internal sealed class ProfilerPanelViewModel : Tool { }

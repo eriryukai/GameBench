@@ -1,8 +1,6 @@
 #nullable enable
 using System;
 using Avalonia;
-using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Fonts.Inter;
 
 namespace GameBench.Editor;
 
@@ -20,10 +18,9 @@ internal static class Program
             .UsePlatformDetect()
             .With(new Win32PlatformOptions
             {
-                RenderingMode = new[] { Win32RenderingMode.AngleEgl, Win32RenderingMode.Software }
+                RenderingMode = new[] { Win32RenderingMode.AngleEgl }
             })
             .WithInterFont()
             .LogToTrace();
     }
-
 }

@@ -1,6 +1,4 @@
 #nullable enable
-using System;
-using System.IO;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -20,15 +18,22 @@ internal sealed class App : Application
 
         DataTemplates.Add(new EditorDockDataTemplate());
 
-        // Retint the Fluent accent (drives focus rings, checks, drag adorners) to the
-        // editor's blue, with computed light/dark ramps so Fluent's shading stays sane.
-        Resources["SystemAccentColor"] = Color.Parse("#3D82C4");
-        Resources["SystemAccentColorLight1"] = Color.Parse("#4E91D0");
-        Resources["SystemAccentColorLight2"] = Color.Parse("#63A1DA");
-        Resources["SystemAccentColorLight3"] = Color.Parse("#82B6E5");
-        Resources["SystemAccentColorDark1"] = Color.Parse("#356FA8");
-        Resources["SystemAccentColorDark2"] = Color.Parse("#2C5C8C");
-        Resources["SystemAccentColorDark3"] = Color.Parse("#224A72");
+        Resources["SystemAccentColor"] = Color.Parse("#EC9E24");
+        Resources["SystemAccentColorLight1"] = Color.Parse("#EF8948");
+        Resources["SystemAccentColorLight2"] = Color.Parse("#F2A16E");
+        Resources["SystemAccentColorLight3"] = Color.Parse("#F6BA93");
+        Resources["SystemAccentColorDark1"] = Color.Parse("#D35E12");
+        Resources["SystemAccentColorDark2"] = Color.Parse("#AE4D0F");
+        Resources["SystemAccentColorDark3"] = Color.Parse("#883C0C");
+
+        Resources["ScrollBarBackground"] = EditorTheme.ScrollTrack;
+        Resources["ScrollBarBackgroundPointerOver"] = EditorTheme.ScrollTrack;
+        Resources["ScrollBarTrackFill"] = Brushes.Transparent;
+        Resources["ScrollBarTrackFillPointerOver"] = Brushes.Transparent;
+        Resources["ScrollBarPanningThumbBackground"] = EditorTheme.ScrollThumb;
+        Resources["ScrollBarThumbBackgroundColor"] = EditorTheme.ScrollThumbHover;
+        Resources["ScrollBarThumbFillPointerOver"] = EditorTheme.ScrollThumbHover;
+        Resources["ScrollBarThumbFillPressed"] = EditorTheme.ScrollThumbActive;
 
         Styles.Add(new FluentTheme());
         Styles.Add(new DockFluentTheme

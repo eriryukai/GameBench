@@ -2,7 +2,6 @@
 #include "stdafx.h"
 #include "Renderer/Renderer.h"
 #include <string>
-#include <cstring>
 
 #if WITH_EDITOR
 namespace
