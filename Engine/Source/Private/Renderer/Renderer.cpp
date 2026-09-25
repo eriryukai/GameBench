@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/ShaderLibrary.h"
 #include "OS/Window/Window.h"
 
 #include <d3d12.h>
@@ -42,8 +43,15 @@ void Renderer::UnInitialize()
 {
 	if (m_Device && m_Fence && m_FenceEvent)
 	{
-		WaitForGpu();
+		try { WaitForGpu(); }
+		catch (const std::exception& error) { OutputDebugStringA(error.what()); }
 	}
+#if WITH_EDITOR
+	DestroyViewportTargets();
+	m_ViewportContext.Reset();
+	m_ViewportDevice.Reset();
+	m_EditorViewport = false;
+#endif
 
 	if (m_FenceEvent)
 	{
@@ -52,6 +60,21 @@ void Renderer::UnInitialize()
 	}
 
 	bInitialize = false;
+	for (auto& target : m_RenderTargets) target.Reset();
+	for (auto& allocator : m_CommandAllocators) allocator.Reset();
+	m_CommandList.Reset();
+	m_PipelineState.Reset();
+	m_RootSignature.Reset();
+	m_RtvHeap.Reset();
+	m_SwapChain.Reset();
+	m_Fence.Reset();
+	m_CommandQueue.Reset();
+	m_Device.Reset();
+	m_Factory.Reset();
+	m_FrameIndex = 0;
+	m_NextFenceValue = 1;
+	m_Width = m_Height = 0;
+	std::fill(std::begin(m_FenceValues), std::end(m_FenceValues), 0);
 }
 
 bool Renderer::IsInitialized()
@@ -76,6 +99,7 @@ void Renderer::BeginRender()
 	{
 		return;
 	}
+
 	// Transition the current back buffer PRESENT -> RENDER_TARGET.
 	const CD3DX12_RESOURCE_BARRIER toRenderTarget = CD3DX12_RESOURCE_BARRIER::Transition(
 		m_RenderTargets[m_FrameIndex].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -88,6 +112,20 @@ void Renderer::ExecuteRender()
 	{
 		return;
 	}
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtv(m_RtvHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_RtvDescriptorSize);
+	const float clearColor[] = { 0.035f, 0.065f, 0.11f, 1.0f };
+	m_CommandList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
+	m_CommandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
+
+	const D3D12_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<float>(m_Width), static_cast<float>(m_Height), 0.0f, 1.0f };
+	const D3D12_RECT scissor = { 0, 0, static_cast<LONG>(m_Width), static_cast<LONG>(m_Height) };
+	m_CommandList->RSSetViewports(1, &viewport);
+	m_CommandList->RSSetScissorRects(1, &scissor);
+	m_CommandList->SetGraphicsRootSignature(m_RootSignature.Get());
+	m_CommandList->SetPipelineState(m_PipelineState.Get());
+	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+	// Triangle.hlsl generates its three vertices from SV_VertexID.
+	m_CommandList->DrawInstanced(3, 1, 0, 0);
 }
 
 void Renderer::Present()
@@ -109,6 +147,14 @@ void Renderer::Present()
 	}
 	ID3D12CommandList* ppCommandLists[] = { m_CommandList.Get() };
 	m_CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
+
+#if WITH_EDITOR
+	if (m_EditorViewport)
+	{
+		SubmitViewportFrame();
+		return;
+	}
+#endif
 
 	hr = m_SwapChain->Present(1, 0);
 	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
@@ -134,6 +180,7 @@ bool Renderer::InitializeRHI()
 	CreateRenderTargetViews();
 	CreateCommandObjects();
 	CreateSyncObjects();
+	CreateTrianglePipeline();
 
 	return true;
 }
@@ -145,6 +192,19 @@ void Renderer::Tick()
 		return;
 	}
 
+	int width = 0, height = 0;
+	glfwGetFramebufferSize(static_cast<GLFWwindow*>(m_Window->GetNativeHandle()), &width, &height);
+	if (width <= 0 || height <= 0)
+	{
+		glfwWaitEventsTimeout(0.05);
+		return;
+	}
+	if (m_Width != static_cast<UINT>(width) || m_Height != static_cast<UINT>(height))
+	{
+		m_Width = width;
+		m_Height = height;
+		ResizeSwapChain();
+	}
 	BeginRender();
 	ExecuteRender();
 	Present();
@@ -155,7 +215,7 @@ void Renderer::Tick()
 // DX12 bring-up
 // ---------------------------------------------------------------------------
 
-void Renderer::CreateDevice()
+void Renderer::CreateDevice(const LUID* adapterLuid)
 {
 	UINT dxgiFactoryFlags = 0;
 
@@ -176,7 +236,16 @@ void Renderer::CreateDevice()
 		return;
 	}
 	ComPtr<IDXGIAdapter1> hardwareAdapter;
-	GetHardwareAdapter(m_Factory.Get(), &hardwareAdapter);
+	if (adapterLuid)
+	{
+		hr = m_Factory->EnumAdapterByLuid(*adapterLuid, IID_PPV_ARGS(&hardwareAdapter));
+		if (FAILED(hr))
+		{
+			return;
+		}
+	}
+	else
+		GetHardwareAdapter(m_Factory.Get(), &hardwareAdapter);
 
 	hr = D3D12CreateDevice(hardwareAdapter.Get(), D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_Device));
 	if (FAILED(hr))
@@ -204,6 +273,8 @@ void Renderer::CreateSwapChain()
 	swapChainDesc.BufferCount = FrameCount;
 	swapChainDesc.Width = m_Window->GetWidth();
 	swapChainDesc.Height = m_Window->GetHeight();
+	m_Width = swapChainDesc.Width;
+	m_Height = swapChainDesc.Height;
 	swapChainDesc.Format = m_RtvFormat;
 	swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
@@ -223,13 +294,11 @@ void Renderer::CreateSwapChain()
 	{
 		return;
 	}
-	
 	hr = swapChain.As(&m_SwapChain);
 	if (FAILED(hr))
 	{
 		return;
 	}
-
 	m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 }
 
@@ -247,7 +316,6 @@ void Renderer::CreateRenderTargetViews()
 		{
 			return;
 		}
-
 		m_RtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
@@ -259,7 +327,6 @@ void Renderer::CreateRenderTargetViews()
 		{
 			return;
 		}
-
 		m_Device->CreateRenderTargetView(m_RenderTargets[n].Get(), nullptr, rtvHandle);
 		rtvHandle.Offset(1, m_RtvDescriptorSize);
 	}
@@ -282,7 +349,6 @@ void Renderer::CreateCommandObjects()
 	{
 		return;
 	}
-
 	hr = m_CommandList->Close();
 	if (FAILED(hr))
 	{
@@ -292,14 +358,11 @@ void Renderer::CreateCommandObjects()
 
 void Renderer::CreateSyncObjects()
 {
-	HRESULT hr = m_Device->CreateFence(m_FenceValues[m_FrameIndex], D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence));
+	HRESULT hr = m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence));
 	if (FAILED(hr))
 	{
 		return;
 	}
-
-	m_FenceValues[m_FrameIndex]++;
-
 	m_FenceEvent = CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	if (m_FenceEvent == nullptr)
 	{
@@ -311,6 +374,49 @@ void Renderer::CreateSyncObjects()
 	}
 
 	WaitForGpu();
+}
+
+void Renderer::CreateTrianglePipeline()
+{
+	const CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(0, nullptr, 0, nullptr);
+	ComPtr<ID3DBlob> signature;
+	HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
+		&signature, nullptr);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	hr = m_Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
+		IID_PPV_ARGS(&m_RootSignature));
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	const ShaderLibrary shaders;
+	const auto vertexShader = shaders.Load("Triangle", "VSMain");
+	const auto pixelShader = shaders.Load("Triangle", "PSMain");
+	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeline = {};
+	pipeline.pRootSignature = m_RootSignature.Get();
+	pipeline.VS = { vertexShader.data(), vertexShader.size() };
+	pipeline.PS = { pixelShader.data(), pixelShader.size() };
+	pipeline.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
+	pipeline.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
+	pipeline.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
+	pipeline.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
+	pipeline.DepthStencilState.DepthEnable = FALSE;
+	pipeline.DepthStencilState.StencilEnable = FALSE;
+	pipeline.SampleMask = UINT_MAX;
+	pipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+	pipeline.NumRenderTargets = 1;
+	pipeline.RTVFormats[0] = m_RtvFormat;
+	pipeline.SampleDesc.Count = 1;
+	hr = m_Device->CreateGraphicsPipelineState(&pipeline, IID_PPV_ARGS(&m_PipelineState));
+	if (FAILED(hr))
+	{
+		return;
+	}
 }
 
 void Renderer::ResizeSwapChain()
@@ -329,59 +435,41 @@ void Renderer::ResizeSwapChain()
 	{
 		return;
 	}
-
-	hr = m_SwapChain->ResizeBuffers(FrameCount, m_Window->GetWidth(), m_Window->GetHeight(), m_RtvFormat, desc.Flags);
+	hr = m_SwapChain->ResizeBuffers(FrameCount, m_Width, m_Height, m_RtvFormat, desc.Flags);
 	if (FAILED(hr))
 	{
 		return;
 	}
-
 	m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 	CreateRenderTargetViews();
 }
 
 void Renderer::WaitForGpu()
 {
-	const UINT64 fenceToWaitFor = m_FenceValues[m_FrameIndex];
+	const UINT64 fenceToWaitFor = m_NextFenceValue++;
 	HRESULT hr = (m_CommandQueue->Signal(m_Fence.Get(), fenceToWaitFor));
 	if (FAILED(hr))
 	{
 		return;
 	}
-
-	hr = m_Fence->SetEventOnCompletion(fenceToWaitFor, m_FenceEvent);
-	if (FAILED(hr))
-	{
-		return;
-	}
-	WaitForSingleObject(m_FenceEvent, INFINITE);
-
-	m_FenceValues[m_FrameIndex]++;
+	WaitForFence(m_Fence.Get(), fenceToWaitFor);
 }
 
 void Renderer::MoveToNextFrame()
 {
-	const UINT64 currentFenceValue = m_FenceValues[m_FrameIndex];
+	const UINT64 currentFenceValue = m_NextFenceValue++;
 	HRESULT hr = m_CommandQueue->Signal(m_Fence.Get(), currentFenceValue);
 	if (FAILED(hr))
 	{
 		return;
 	}
-
+	m_FenceValues[m_FrameIndex] = currentFenceValue;
 	m_FrameIndex = m_SwapChain->GetCurrentBackBufferIndex();
 
 	if (m_Fence->GetCompletedValue() < m_FenceValues[m_FrameIndex])
 	{
-		hr = m_Fence->SetEventOnCompletion(m_FenceValues[m_FrameIndex], m_FenceEvent);
-		if (FAILED(hr))
-		{
-			return;
-		}
-
-		WaitForSingleObject(m_FenceEvent, INFINITE);
+		WaitForFence(m_Fence.Get(), m_FenceValues[m_FrameIndex]);
 	}
-
-	m_FenceValues[m_FrameIndex] = currentFenceValue + 1;
 }
 
 void Renderer::GetHardwareAdapter(IDXGIFactory1* factory, IDXGIAdapter1** ppAdapter)
@@ -419,4 +507,26 @@ void Renderer::GetHardwareAdapter(IDXGIFactory1* factory, IDXGIAdapter1** ppAdap
 	}
 
 	*ppAdapter = adapter.Detach();
+}
+
+void Renderer::WaitForFence(ID3D12Fence* fence, UINT64 value)
+{
+	if (fence->GetCompletedValue() == UINT64_MAX)
+	{
+		HRESULT hr = m_Device->GetDeviceRemovedReason();
+		if (FAILED(hr))
+		{
+			return;
+		}
+	}
+	if (fence->GetCompletedValue() >= value)
+		return;
+	HRESULT hr = fence->SetEventOnCompletion(value, m_FenceEvent);
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	if (WaitForSingleObject(m_FenceEvent, 5000) != WAIT_OBJECT_0)
+		throw std::runtime_error("Timed out waiting for the GPU.");
 }
