@@ -85,11 +85,6 @@ void Application::Tick()
 	{
 		m_Renderer->Tick();
 	}
-
-	for (Layer* layer : m_LayerStack)
-	{
-		layer->OnImGuiRender();
-	}
 }
 
 void Application::Shutdown()
