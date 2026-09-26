@@ -10,11 +10,6 @@
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-#define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>
-
 using Microsoft::WRL::ComPtr;
 
 Renderer::Renderer()
@@ -102,24 +97,6 @@ void Renderer::BeginRender()
 
 void Renderer::ExecuteRender()
 {
-	if (!bInitialize)
-	{
-		return;
-	}
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtv(m_RtvHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_RtvDescriptorSize);
-	const float clearColor[] = { 0.035f, 0.065f, 0.11f, 1.0f };
-	m_CommandList->OMSetRenderTargets(1, &rtv, FALSE, nullptr);
-	m_CommandList->ClearRenderTargetView(rtv, clearColor, 0, nullptr);
-
-	const D3D12_VIEWPORT viewport = { 0.0f, 0.0f, static_cast<float>(m_Width), static_cast<float>(m_Height), 0.0f, 1.0f };
-	const D3D12_RECT scissor = { 0, 0, static_cast<LONG>(m_Width), static_cast<LONG>(m_Height) };
-	m_CommandList->RSSetViewports(1, &viewport);
-	m_CommandList->RSSetScissorRects(1, &scissor);
-	m_CommandList->SetGraphicsRootSignature(m_RootSignature.Get());
-	m_CommandList->SetPipelineState(m_PipelineState.Get());
-	m_CommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	// Triangle.hlsl generates its three vertices from SV_VertexID.
-	m_CommandList->DrawInstanced(3, 1, 0, 0);
 }
 
 void Renderer::Present()
@@ -142,7 +119,7 @@ void Renderer::Present()
 	ID3D12CommandList* ppCommandLists[] = { m_CommandList.Get() };
 	m_CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-	hr = m_SwapChain->Present(1, 0);
+	hr = m_SwapChain->Present(m_SyncInterval, 0);
 	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
 	{
 		throw std::runtime_error("DX12 device removed/reset during Present.");
@@ -161,35 +138,86 @@ void Renderer::EndRender()
 bool Renderer::InitializeRHI()
 {
 	CreateDevice();
+	if (!m_Factory || !m_Device)
+	{
+		return false;
+	}
+
 	CreateCommandQueue();
+	if (!m_CommandQueue)
+	{
+		return false;
+	}
+
 	CreateSwapChain();
+	if (!m_SwapChain)
+	{
+		return false;
+	}
+
 	CreateRenderTargetViews();
+	if (!m_RtvHeap)
+	{
+		return false;
+	}
+	for (UINT n = 0; n < FrameCount; n++)
+	{
+		if (!m_RenderTargets[n])
+		{
+			return false;
+		}
+	}
+
 	CreateCommandObjects();
+	if (!m_CommandList)
+	{
+		return false;
+	}
+	for (UINT n = 0; n < FrameCount; n++)
+	{
+		if (!m_CommandAllocators[n])
+		{
+			return false;
+		}
+	}
+
 	CreateSyncObjects();
+	if (!m_Fence || m_FenceEvent == nullptr)
+	{
+		return false;
+	}
 
 	return true;
 }
 
+void Renderer::SetVSyncEnabled(bool bEnabled)
+{
+	m_SyncInterval = bEnabled ? 1 : 0;
+}
+
 void Renderer::Tick()
 {
-	if (!bInitialize)
+	if (!bInitialize || !m_Window)
 	{
 		return;
 	}
 
-	int width = 0, height = 0;
-	glfwGetFramebufferSize(static_cast<GLFWwindow*>(m_Window->GetNativeHandle()), &width, &height);
-	if (width <= 0 || height <= 0)
+	uint32_t width = 0, height = 0;
+	m_Window->PollFramebufferSize(width, height);
+	if (width == 0 || height == 0)
 	{
-		glfwWaitEventsTimeout(0.05);
+		// Minimized or occluded: idle instead of spinning a 100% CPU loop.
+		m_Window->WaitEventsTimeout(0.05);
 		return;
 	}
-	if (m_Width != static_cast<UINT>(width) || m_Height != static_cast<UINT>(height))
+
+	if (m_Width != width || m_Height != height)
 	{
 		m_Width = width;
 		m_Height = height;
 		ResizeSwapChain();
 	}
+
 	BeginRender();
 	ExecuteRender();
 	Present();
@@ -261,7 +289,7 @@ void Renderer::CreateSwapChain()
 	swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 	swapChainDesc.SampleDesc.Count = 1;
 
-	const HWND hwnd = glfwGetWin32Window(static_cast<GLFWwindow*>(m_Window->GetNativeHandle()));
+	const HWND hwnd = static_cast<HWND>(m_Window->GetHandle());
 
 	ComPtr<IDXGISwapChain1> swapChain;
 	HRESULT hr = m_Factory->CreateSwapChainForHwnd(

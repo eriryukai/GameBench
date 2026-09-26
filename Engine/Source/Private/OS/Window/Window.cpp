@@ -67,9 +67,36 @@ bool Window::ShouldClose() const
 	return m_bShouldClose;
 }
 
+void Window::PollFramebufferSize(uint32_t& OutWidth, uint32_t& OutHeight) const
+{
+#if MORTAR_WINDOW_USE_GLFW
+	GLFWWindow::PollFramebufferSize(m_NativeHandle, OutWidth, OutHeight);
+#elif MORTAR_PLATFORM_WINDOWS
+	WindowsWindow::PollFramebufferSize(m_NativeHandle, OutWidth, OutHeight);
+#endif
+}
+
+void Window::WaitEventsTimeout(double Seconds) const
+{
+#if MORTAR_WINDOW_USE_GLFW
+	GLFWWindow::WaitEventsTimeout(Seconds);
+#elif MORTAR_PLATFORM_WINDOWS
+	WindowsWindow::WaitEventsTimeout(Seconds);
+#endif
+}
+
 void* Window::GetNativeHandle() const
 {
 	return m_NativeHandle;
+}
+
+void* Window::GetHandle() const
+{
+#if MORTAR_WINDOW_USE_GLFW
+	return GLFWWindow::GetRenderHandle(m_NativeHandle);
+#elif MORTAR_PLATFORM_WINDOWS
+	return m_NativeHandle;
+#endif
 }
 
 uint32_t Window::GetWidth() const

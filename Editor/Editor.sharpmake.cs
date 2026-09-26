@@ -29,17 +29,24 @@ namespace GameBench
             conf.IntermediatePath = @"[project.SharpmakeCsPath]\Intermediate\Build\[project.Name]\[target.Platform]_[target.OutputFolder]";
             conf.TargetPath = @"[project.SharpmakeCsPath]\Binaries\[target.Platform]\[target.OutputFolder]";
             conf.Output = Configuration.OutputType.DotNetWindowsApp;
-            // Build the native DLL first without treating it as a managed assembly.
-            conf.AddPrivateDependency<Engine>(target.Clone(DotNetFramework.v4_7_2), DependencySetting.OnlyBuildOrder);
+
+            //@TODO: Currently, disabling engine project as editor right now purely visual. Need to solve:
+            //@TODO: Figure out a model, similiar to unreal engine that even with a game project we still have one application. 
+            //       With editor, same BUT we will interop the function. Right now, We created 4 functions for interop.
+            //       Ideally, we just have ONE interop function and stuff like tick, shutdown etx just handle by editor telling the engine to shut down or tick like giving messages
+            //@TODO: Figure out a design. Using UnrealEngine as inspiration, the Engine class acts as the base Application class, and depends on Runtime or Editor, we will have 
+            //       EditorEngine or GameEngine
+            //conf.AddPrivateDependency<Engine>(target.Clone(DotNetFramework.v4_7_2), DependencySetting.OnlyBuildOrder);
+
             conf.CsprojUserFile = new Configuration.CsprojUserFileSettings
             {
                 EnableUnmanagedDebug = true,
                 StartArguments = ""
             };
-            string nativeDir = @"$(SolutionDir)Engine\Binaries\win64\$(Configuration)";
-            conf.EventPostBuild.Add($@"copy /Y ""{nativeDir}\Engine.dll"" ""$(TargetDir)Engine.dll""");
-            conf.EventPostBuild.Add($@"if exist ""{nativeDir}\Engine.pdb"" copy /Y ""{nativeDir}\Engine.pdb"" ""$(TargetDir)Engine.pdb""");
-            conf.EventPostBuild.Add($@"xcopy ""{nativeDir}\Shaders"" ""$(TargetDir)Shaders"" /E /I /Y /D");
+            string BinariesDir = @"$(SolutionDir)Engine\Binaries\win64\$(Configuration)";
+            conf.EventPostBuild.Add($@"copy /Y ""{BinariesDir}\Engine.dll"" ""$(TargetDir)Engine.dll""");
+            conf.EventPostBuild.Add($@"if exist ""{BinariesDir}\Engine.pdb"" copy /Y ""{BinariesDir}\Engine.pdb"" ""$(TargetDir)Engine.pdb""");
+            conf.EventPostBuild.Add($@"xcopy ""{BinariesDir}\Shaders"" ""$(TargetDir)Shaders"" /E /I /Y /D");
             conf.EventPostBuild.Add(@"xcopy ""$(SolutionDir)packages\Microsoft.Direct3D.D3D12.1.619.5\build\native\bin\x64\*.dll"" ""$(TargetDir)D3D12"" /I /Y /D");
             conf.EventPostBuild.Add(@"xcopy ""$(SolutionDir)Editor\Resources"" ""$(TargetDir)Resources"" /E /I /Y /D");
 

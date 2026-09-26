@@ -16,7 +16,16 @@ public:
 	void PumpMessages();
 	bool ShouldClose() const;
 
+	void PollFramebufferSize(uint32_t& OutWidth, uint32_t& OutHeight) const;
+	void WaitEventsTimeout(double Seconds) const;
+
 	void* GetNativeHandle() const;
+
+	// Backend specific render target handle, i.e. an HWND on Windows. This is what the
+	// renderer needs in order to create a swap chain, as opposed to GetNativeHandle()
+	// which returns the backend's own window object.
+	void* GetHandle() const;
+
 	uint32_t GetWidth() const;
 	uint32_t GetHeight() const;
 

@@ -6,7 +6,6 @@
 #include <dxgi1_6.h>
 #include <wrl/client.h>
 
-class FrameGraph;
 class Window;
 
 class Renderer
@@ -16,6 +15,7 @@ public:
 	~Renderer();
 
 	void Initialize(Window* window);
+	void SetVSyncEnabled(bool bEnabled);
 	void Tick();
 	void UnInitialize();
 
@@ -35,7 +35,6 @@ private:
 	void CreateRenderTargetViews();
 	void CreateCommandObjects();
 	void CreateSyncObjects();
-	void CreateTrianglePipeline();
 
 	// Per frame / resize.
 	void ResizeSwapChain();
@@ -71,6 +70,7 @@ private:
 	Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
 	UINT64 m_FenceValues[FrameCount] = {};
 	UINT64 m_NextFenceValue = 1;
+	UINT m_SyncInterval = 1;
 	UINT m_Width = 0;
 	UINT m_Height = 0;
 };

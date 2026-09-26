@@ -23,13 +23,20 @@ void* WindowsWindow::Create(const WindowSpecification& Spec)
 	int Height = static_cast<int>(Spec.GetHeight());
 
 	wchar_t WideTitle[256];
-	MultiByteToWideChar(CP_UTF8, 0, Spec.GetTitle(), -1, WideTitle, 256);
+	MultiByteToWideChar(CP_UTF8, 0, Spec.GetTitle().c_str(), -1, WideTitle, 256);
+
+	DWORD Style = WS_OVERLAPPEDWINDOW;
+	if (!Spec.GetDecorated())
+	{
+		Style &= ~(WS_DLGFRAME | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+		Style |= WS_POPUP;
+	}
 
 	HWND hwnd = CreateWindowExW(
 		0,
 		CLASS_NAME,
 		WideTitle,
-		WS_OVERLAPPEDWINDOW,
+		Style,
 		CW_USEDEFAULT, CW_USEDEFAULT, Width, Height,
 		nullptr,
 		nullptr,
@@ -42,8 +49,24 @@ void* WindowsWindow::Create(const WindowSpecification& Spec)
 		return nullptr;
 	}
 
+	if (!Spec.GetResizable())
+	{
+		SetWindowLongPtrW(hwnd, GWL_STYLE, Style & ~WS_THICKFRAME);
+	}
+
+	if (!Spec.GetIconPath().empty())
+	{
+		// Spec.IconPath is plumbed through but not applied yet: the project has no image
+		// decoder, so there is nothing that could turn the file into an HICON here.
+	}
+
 	ShowWindow(hwnd, SW_SHOW);
 	UpdateWindow(hwnd);
+
+	if (Spec.GetStartMaximized())
+	{
+		ShowWindow(hwnd, SW_MAXIMIZE);
+	}
 
 	return static_cast<void*>(hwnd);
 }
@@ -68,6 +91,41 @@ void WindowsWindow::PumpMessages(bool& bOutShouldClose)
 		}
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
+	}
+}
+
+void WindowsWindow::PollFramebufferSize(void* WindowHandle, uint32_t& OutWidth, uint32_t& OutHeight)
+{
+	OutWidth = 0;
+	OutHeight = 0;
+
+	if (!WindowHandle)
+	{
+		return;
+	}
+
+	RECT Rect = {};
+	if (!GetClientRect(static_cast<HWND>(WindowHandle), &Rect))
+	{
+		return;
+	}
+
+	OutWidth = static_cast<uint32_t>(Rect.right - Rect.left);
+	OutHeight = static_cast<uint32_t>(Rect.bottom - Rect.top);
+}
+
+void WindowsWindow::WaitEventsTimeout(double Seconds)
+{
+	MSG msg = {};
+	while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE))
+	{
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
+
+	if (Seconds > 0.0)
+	{
+		Sleep(static_cast<DWORD>(Seconds * 1000.0));
 	}
 }
 
