@@ -16,8 +16,6 @@ internal sealed class App : Application
     {
         RequestedThemeVariant = ThemeVariant.Dark;
 
-        DataTemplates.Add(new EditorDockDataTemplate());
-
         Resources["SystemAccentColor"] = Color.Parse("#EC9E24");
         Resources["SystemAccentColorLight1"] = Color.Parse("#EF8948");
         Resources["SystemAccentColorLight2"] = Color.Parse("#F2A16E");

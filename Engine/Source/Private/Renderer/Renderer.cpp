@@ -46,12 +46,6 @@ void Renderer::UnInitialize()
 		try { WaitForGpu(); }
 		catch (const std::exception& error) { OutputDebugStringA(error.what()); }
 	}
-#if WITH_EDITOR
-	DestroyViewportTargets();
-	m_ViewportContext.Reset();
-	m_ViewportDevice.Reset();
-	m_EditorViewport = false;
-#endif
 
 	if (m_FenceEvent)
 	{
@@ -148,14 +142,6 @@ void Renderer::Present()
 	ID3D12CommandList* ppCommandLists[] = { m_CommandList.Get() };
 	m_CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 
-#if WITH_EDITOR
-	if (m_EditorViewport)
-	{
-		SubmitViewportFrame();
-		return;
-	}
-#endif
-
 	hr = m_SwapChain->Present(1, 0);
 	if (hr == DXGI_ERROR_DEVICE_REMOVED || hr == DXGI_ERROR_DEVICE_RESET)
 	{
@@ -180,7 +166,6 @@ bool Renderer::InitializeRHI()
 	CreateRenderTargetViews();
 	CreateCommandObjects();
 	CreateSyncObjects();
-	CreateTrianglePipeline();
 
 	return true;
 }
@@ -210,10 +195,6 @@ void Renderer::Tick()
 	Present();
 	EndRender();
 }
-
-// ---------------------------------------------------------------------------
-// DX12 bring-up
-// ---------------------------------------------------------------------------
 
 void Renderer::CreateDevice(const LUID* adapterLuid)
 {
@@ -374,49 +355,6 @@ void Renderer::CreateSyncObjects()
 	}
 
 	WaitForGpu();
-}
-
-void Renderer::CreateTrianglePipeline()
-{
-	const CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc(0, nullptr, 0, nullptr);
-	ComPtr<ID3DBlob> signature;
-	HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1,
-		&signature, nullptr);
-	if (FAILED(hr))
-	{
-		return;
-	}
-
-	hr = m_Device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
-		IID_PPV_ARGS(&m_RootSignature));
-	if (FAILED(hr))
-	{
-		return;
-	}
-
-	const ShaderLibrary shaders;
-	const auto vertexShader = shaders.Load("Triangle", "VSMain");
-	const auto pixelShader = shaders.Load("Triangle", "PSMain");
-	D3D12_GRAPHICS_PIPELINE_STATE_DESC pipeline = {};
-	pipeline.pRootSignature = m_RootSignature.Get();
-	pipeline.VS = { vertexShader.data(), vertexShader.size() };
-	pipeline.PS = { pixelShader.data(), pixelShader.size() };
-	pipeline.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-	pipeline.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-	pipeline.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
-	pipeline.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-	pipeline.DepthStencilState.DepthEnable = FALSE;
-	pipeline.DepthStencilState.StencilEnable = FALSE;
-	pipeline.SampleMask = UINT_MAX;
-	pipeline.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-	pipeline.NumRenderTargets = 1;
-	pipeline.RTVFormats[0] = m_RtvFormat;
-	pipeline.SampleDesc.Count = 1;
-	hr = m_Device->CreateGraphicsPipelineState(&pipeline, IID_PPV_ARGS(&m_PipelineState));
-	if (FAILED(hr))
-	{
-		return;
-	}
 }
 
 void Renderer::ResizeSwapChain()

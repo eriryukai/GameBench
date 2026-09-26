@@ -12,13 +12,6 @@ using Dock.Avalonia.Controls;
 
 namespace GameBench.Editor;
 
-// Code-built global styles that retheme the Fluent base into a flat Hazel/Unreal dark
-// look. Button accents are class-driven (.accent/.success/.danger/.toolbar) so their
-// hover/pressed states come from styles instead of inline brushes. Item/menu state
-// colors are set per pseudo-class. Avalonia stores a Style frame ahead of a ControlTheme
-// frame for the same binding priority (FramePriority.Style = 9, StyleTheme = 11) and
-// evaluates ValueStore from the high-precedence end, so these beat Fluent's defaults -
-// including the ones that target /template/ parts.
 internal sealed class EditorStyles : Styles
 {
     public EditorStyles()

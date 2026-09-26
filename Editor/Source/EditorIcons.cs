@@ -1,6 +1,5 @@
 #nullable enable
 using Avalonia;
-using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 
@@ -12,12 +11,6 @@ internal static class EditorIcons
     {
         public const string Play = "M8,5.14V19.14L19,12.14L8,5.14Z";
         public const string Stop = "M18,18H6V6H18V18Z";
-        public const string Pause = "M14,19H18V5H14M6,19H10V5H6V19Z";
-    }
-
-    public static class Viewport
-    {
-        public const string Monitor = "M21,16H3V4H21M21,2H3C1.89,2 1,2.89 1,4V16A2,2 0 0,0 3,18H10V20H8V22H16V20H14V18H21A2,2 0 0,0 23,16V4C23,2.89 22.1,2 21,2Z";
     }
 
     public static class Common

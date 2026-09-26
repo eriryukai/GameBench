@@ -37,9 +37,6 @@ internal sealed class MainWindow : Window
         Background = EditorTheme.WindowBackground;
         TrySetWindowIcon();
 
-        // Undecorated chrome: drop the OS title bar and caption buttons and draw our own
-        // (see CreateHeader). BorderOnly keeps the native resize border so dragging edges,
-        // Aero-snap and maximize-to-work-area still behave natively.
         WindowDecorations = Avalonia.Controls.WindowDecorations.BorderOnly;
 
         _dockControl = new DockControl
@@ -50,8 +47,6 @@ internal sealed class MainWindow : Window
             InitializeLayout = false,
             IsDockingEnabled = true
         };
-
-        EditorViewportMenu.Attach(_dockControl, viewModel.EditorFactory);
 
         var root = new DockPanel { LastChildFill = true };
 
@@ -70,8 +65,6 @@ internal sealed class MainWindow : Window
             Child = _dockControl
         });
 
-        // When maximized with an extended client area, Windows oversizes the window by the
-        // resize-border thickness; pad by OffScreenMargin so nothing spills off-screen.
         _chromeRoot = new Border
         {
             Background = EditorTheme.WindowBackground,
@@ -345,11 +338,6 @@ internal sealed class MainWindow : Window
         var exit = new MenuItem { Header = "Exit" };
         exit.Click += (_, _) => Close();
 
-        // No icon: the viewport entry lives as plain text, unlike the titlebar's old
-        // monitor button which was dropped when it moved into this dropdown.
-        var viewport = new MenuItem { Header = "_Viewport" };
-        viewport.Click += (_, _) => _viewModel.ShowViewport();
-
         return new Menu
         {
             Background = Brushes.Transparent,
@@ -357,7 +345,6 @@ internal sealed class MainWindow : Window
             ItemsSource = new object[]
             {
                 new MenuItem { Header = "_File", ItemsSource = new object[] { exit } },
-                new MenuItem { Header = "_Window", ItemsSource = new object[] { viewport } }
             }
         };
     }
