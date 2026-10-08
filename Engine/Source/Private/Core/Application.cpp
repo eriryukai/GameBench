@@ -4,6 +4,7 @@
 #include "Application.h"
 #include "OS/Window/Window.h"
 #include "Renderer/Renderer.h"
+#include <iostream>
 
 Application* Application::s_Instance = nullptr;
 
@@ -85,6 +86,66 @@ void Application::Tick()
 	{
 		m_Renderer->Tick();
 	}
+
+	std::cout << "[C++ Client] Connecting to pipe...\n";
+
+	// 1. Connect to the pipe using the absolute Win32 pipe namespace path
+	HANDLE hPipe = CreateFileW(
+		L"\\\\.\\pipe\\MyTestPipe",   // Pipe name matching C#
+		GENERIC_READ | GENERIC_WRITE, // Read and write access
+		0,                            // No sharing 
+		NULL,                         // Default security attributes
+		OPEN_EXISTING,                // Opens an existing pipe
+		0,                            // Default attributes
+		NULL                          // No template file
+	);
+
+	if (hPipe == INVALID_HANDLE_VALUE) {
+		std::cerr << "[C++ Client] Failed to connect. Error: " << GetLastError() << "\n";
+		return;
+	}
+	std::cout << "[C++ Client] Connected successfully!\n";
+
+	// 2. Write a message to the C# Server (Include '\n' since C# uses ReadLine)
+	std::string message = "Hello from your C++ Client!\n";
+	DWORD bytesWritten = 0;
+
+	BOOL isSuccess = WriteFile(
+		hPipe,
+		message.c_str(),
+		static_cast<DWORD>(message.length()),
+		&bytesWritten,
+		NULL
+	);
+
+	if (!isSuccess) {
+		std::cerr << "[C++ Client] WriteFile failed. Error: " << GetLastError() << "\n";
+		CloseHandle(hPipe);
+		return;
+	}
+	std::cout << "[C++ Client] Message sent.\n";
+
+	// 3. Read the server's reply
+	char buffer[512] = { 0 };
+	DWORD bytesRead = 0;
+
+	isSuccess = ReadFile(
+		hPipe,
+		buffer,
+		sizeof(buffer) - 1,
+		&bytesRead,
+		NULL
+	);
+
+	if (isSuccess && bytesRead > 0) {
+		std::cout << "[C++ Client] Received: " << buffer;
+	}
+	else {
+		std::cerr << "[C++ Client] ReadFile failed. Error: " << GetLastError() << "\n";
+	}
+
+	// 4. Clean up resources
+	CloseHandle(hPipe);
 }
 
 void Application::Shutdown()
