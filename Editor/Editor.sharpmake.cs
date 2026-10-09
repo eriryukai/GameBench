@@ -14,6 +14,11 @@ namespace GameBench
             IsFileNameToLower = false;
             IsTargetFileNameToLower = false;
             ProjectSchema = CSharpProjectSchema.NetCore;
+
+            PreImportProjects.Add(new ImportProject
+            {
+                Project = @"[project.SharpmakeCsPath]\Editor.Avalonia.props"
+            });
             CustomProperties["Platforms"] = "x64";
             CustomProperties["Configurations"] = "Debug Editor;Release Editor";
             CustomProperties["PlatformTarget"] = "x64";
@@ -50,14 +55,16 @@ namespace GameBench
             conf.EventPostBuild.Add(@"xcopy ""$(SolutionDir)packages\Microsoft.Direct3D.D3D12.1.619.5\build\native\bin\x64\*.dll"" ""$(TargetDir)D3D12"" /I /Y /D");
             conf.EventPostBuild.Add(@"xcopy ""$(SolutionDir)Editor\Resources"" ""$(TargetDir)Resources"" /E /I /Y /D");
 
-            conf.ReferencesByNuGetPackage.Add("Avalonia", "12.0.5");
-            conf.ReferencesByNuGetPackage.Add("Avalonia.Desktop", "12.0.5");
-            conf.ReferencesByNuGetPackage.Add("Avalonia.Themes.Fluent", "12.0.5");
-            conf.ReferencesByNuGetPackage.Add("Avalonia.Fonts.Inter", "12.0.5");
+            conf.ReferencesByNuGetPackage.Add("Avalonia", "12.1.3");
+            conf.ReferencesByNuGetPackage.Add("Avalonia.Desktop", "12.1.3");
+            conf.ReferencesByNuGetPackage.Add("Avalonia.Themes.Fluent", "12.1.3");
+            conf.ReferencesByNuGetPackage.Add("Avalonia.Fonts.Inter", "12.1.3");
 
-            conf.ReferencesByNuGetPackage.Add("Dock.Avalonia", "12.0.0.2");
-            conf.ReferencesByNuGetPackage.Add("Dock.Model.Mvvm", "12.0.0.2");
-            conf.ReferencesByNuGetPackage.Add("Dock.Avalonia.Themes.Fluent", "12.0.0.2");
+            conf.ReferencesByNuGetPackage.Add("Dock.Avalonia", "12.1.0.7");
+            conf.ReferencesByNuGetPackage.Add("Dock.Model.Mvvm", "12.1.0.7");
+            conf.ReferencesByNuGetPackage.Add("Dock.Avalonia.Themes.Fluent", "12.1.0.7");
+
+            conf.ReferencesByNuGetPackage.Add("ReactiveUI.Avalonia", "12.1.6");
         }
     }
 }

@@ -1,7 +1,7 @@
 #nullable enable
 using System;
 using Avalonia;
-
+using ReactiveUI.Avalonia;
 namespace GameBench.Editor;
 
 internal static class Program
@@ -21,6 +21,8 @@ internal static class Program
                 RenderingMode = new[] { Win32RenderingMode.AngleEgl }
             })
             .WithInterFont()
+            .UsePlatformDetect()
+            .UseReactiveUI(_ => { })
             .LogToTrace();
     }
 }
