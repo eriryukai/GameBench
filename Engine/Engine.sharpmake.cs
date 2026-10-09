@@ -37,7 +37,7 @@ namespace GameBench
             InitializePlatform(conf, target);
             InitializeDependencies(conf, target.NativeToolTarget);
             BuildShaderPipeline(conf);
-            ConfigureEditor(conf, target);
+            ConfigureApplication(conf, target);
         }
 
         void InitializePlatform(Configuration conf, Target target)
@@ -76,20 +76,21 @@ namespace GameBench
             *   DX12   : "<TargetDir>\Shaders\DXIL\<Name>_<Entry>.dxil"
             */
             conf.EventPreBuildDescription = "Compiling shaders with ShaderMake (SPIR-V + DXIL)";
-            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Optimization]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Optimization]\ShaderMake.exe"" ""$(VULKAN_SDK)\Bin\dxc.exe"" SPIRV");
-            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Optimization]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Optimization]\ShaderMake.exe"" auto DXIL");
+            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" ""$(VULKAN_SDK)\Bin\dxc.exe"" SPIRV");
+            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" auto DXIL");
         }
 
-        void ConfigureEditor(Configuration conf, GameBenchTarget target)
+        void ConfigureApplication(Configuration conf, GameBenchTarget target)
         {
-            bool editor = target.Mode == BuildMode.Editor;
-            conf.Output = editor ? Configuration.OutputType.Dll : Configuration.OutputType.Exe;
-            conf.Defines.Add(editor ? "WITH_EDITOR=1" : "WITH_EDITOR=0");
+            conf.Output = Configuration.OutputType.Exe;
+            conf.Defines.Add("WITH_EDITOR=0");
             conf.Defines.Add("NOMINMAX", "WIN32_LEAN_AND_MEAN");
             conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
-            conf.SourceFilesBuildExcludeRegex.Add(editor ? @"[\\/]Launch[\\/]" : @"[\\/]Editor[\\/]");
-            if (editor)
-                conf.LibraryFiles.Add("d3d11.lib");
+            conf.SourceFilesBuildExcludeRegex.Add(@"[\\/]Editor[\\/]");
+            if (target.IsShipping)
+            {
+                conf.Defines.Add("GAMEBENCH_SHIPPING=1");
+            }
             conf.VcxprojUserFile = new Configuration.VcxprojUserFileSettings
             {
                 LocalDebuggerCommand = "$(TargetPath)",

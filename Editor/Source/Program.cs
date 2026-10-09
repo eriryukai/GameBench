@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Runtime.InteropServices;
 using System.Text;
 using Avalonia;
 
@@ -9,9 +10,18 @@ namespace GameBench.Editor;
 
 internal static class Program
 {
+    [DllImport("kernel32.dll")]
+    private static extern bool FreeConsole();
+
     [STAThread]
     private static void Main(string[] args)
     {
+#if GAMEBENCH_SHIPPING
+        // Shipping builds run windowed; detach from the inherited console so no
+        // console window is shown or stays open next to the editor UI.
+        FreeConsole();
+#endif
+
         Console.WriteLine("[C# Server] Starting...");
 
         // 1. Create the named pipe server stream (Byte mode is best for C++ compatibility)
@@ -56,4 +66,5 @@ internal static class Program
             .WithInterFont()
             .LogToTrace();
     }
+
 }
