@@ -65,6 +65,7 @@ namespace GameBench
             conf.ReferencesByNuGetPackage.Add("Microsoft.Direct3D.D3D12", "1.619.5");
 
             conf.AddPrivateDependency<DirectX12>(target);
+            conf.AddPrivateDependency<D3D12MemoryAllocator>(target);
             conf.AddPrivateDependency<ShaderMakeTool>(target, DependencySetting.OnlyBuildOrder);
         }
 

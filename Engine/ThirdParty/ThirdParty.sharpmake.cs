@@ -66,3 +66,48 @@ public class ShaderMakeTool : Project
         conf.Defines.Add("_CRT_SECURE_NO_WARNINGS");
     }
 }
+
+[Generate]
+public class D3D12MemoryAllocator : Project
+{
+    public D3D12MemoryAllocator()
+    {
+        Name = "D3D12MemoryAllocator";
+        SourceRootPath = @"[project.SharpmakeCsPath]\D3D12MemoryAllocator";
+
+        SourceFilesExtensions.Clear();
+        SourceFiles.AddRange(new[]
+        {
+            @"src\D3D12MemAlloc.cpp", @"include\D3D12MemAlloc.h"
+        });
+        IsFileNameToLower = false;
+        IsTargetFileNameToLower = false;
+
+        AddTargets(new Target(
+            Platform.win64,
+            DevEnv.vs2026,
+            Optimization.Debug | Optimization.Release));
+    }
+
+    [Configure]
+    public void ConfigureAll(Configuration conf, Target target)
+    {
+        conf.ProjectFileName = "[project.Name]";
+        conf.ProjectPath = @"[project.SharpmakeCsPath]\D3D12MemoryAllocator\Intermediate\ProjectFiles";
+        conf.IntermediatePath = @"[project.SharpmakeCsPath]\D3D12MemoryAllocator\Intermediate\[target.Platform]_[conf.Name]";
+        conf.TargetPath = @"[project.SharpmakeCsPath]\D3D12MemoryAllocator\Binaries\[target.Platform]_[conf.Name]";
+        conf.Output = Configuration.OutputType.Lib;
+
+        conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\D3D12MemoryAllocator\include");
+
+        conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
+        conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
+        conf.Defines.Add("WIN32_LEAN_AND_MEAN");
+        conf.Defines.Add("NOMINMAX");
+
+        // Compile against the same D3D12 headers as the engine (Agility SDK, propagated
+        // by the DirectX12 export project) so D3D12MemAlloc.h's conditional interface
+        // sections (__ID3D12Device8/10/12_INTERFACE_DEFINED__) match in every project.
+        conf.AddPrivateDependency<DirectX12>(target);
+    }
+}
