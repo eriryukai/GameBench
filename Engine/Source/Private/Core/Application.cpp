@@ -108,6 +108,10 @@ void Application::Tick()
 
 		m_Renderer->BeginRender();
 		// @TODO: DrawCalls from game simulation to renderer.
+		if (GetSpecification().bEnabledImGui)
+		{
+			m_Renderer->RenderImGui();
+		}
 		m_Renderer->EndRender();
 		m_Renderer->Present();
 	}

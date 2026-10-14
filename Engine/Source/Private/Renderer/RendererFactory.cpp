@@ -51,7 +51,7 @@ void RendererFactory::UnInitialize()
 	m_CommandList.Reset();
 	m_PipelineState.Reset();
 	m_RootSignature.Reset();
-	m_RtvHeap.Reset();
+	m_SwapChainRtvHeap.Reset();
 	m_SwapChain.Reset();
 	m_Fence.Reset();
 	m_CommandQueue.Reset();
@@ -183,23 +183,23 @@ void RendererFactory::CreateSwapChain()
 
 void RendererFactory::CreateRenderTargetViews()
 {
-	if (!m_RtvHeap)
+	if (!m_SwapChainRtvHeap)
 	{
-		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-		rtvHeapDesc.NumDescriptors = FrameCount;
-		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		D3D12_DESCRIPTOR_HEAP_DESC swapChainRtvHeapDesc = {};
+		swapChainRtvHeapDesc.NumDescriptors = FrameCount;
+		swapChainRtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		swapChainRtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 
-		HRESULT hr = m_Device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_RtvHeap));
+		HRESULT hr = m_Device->CreateDescriptorHeap(&swapChainRtvHeapDesc, IID_PPV_ARGS(&m_SwapChainRtvHeap));
 		if (FAILED(hr))
 		{
 			std::print("Fails to create descriptor heap for render target view for the swapchain back buffer in %s", __FUNCTION__);
 			return;
 		}
-		m_RtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		m_SwapChainRtvDescriptorSize = m_Device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 	}
 
-	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_RtvHeap->GetCPUDescriptorHandleForHeapStart());
+	CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(m_SwapChainRtvHeap->GetCPUDescriptorHandleForHeapStart());
 	for (UINT n = 0; n < FrameCount; n++)
 	{
 		HRESULT hr = m_SwapChain->GetBuffer(n, IID_PPV_ARGS(&m_RenderTargets[n]));
@@ -214,7 +214,7 @@ void RendererFactory::CreateRenderTargetViews()
 			std::print("Fails to create render target view for the current index %d swapchain back buffer in %s", n, __FUNCTION__);
 			return;
 		}
-		rtvHandle.Offset(1, m_RtvDescriptorSize);
+		rtvHandle.Offset(1, m_SwapChainRtvDescriptorSize);
 	}
 }
 
@@ -268,13 +268,13 @@ void RendererFactory::CreateSyncObjects()
 
 bool RendererFactory::IsRHIValid() const
 {
-	return m_Device && m_CommandQueue && m_SwapChain && m_RtvHeap &&
+	return m_Device && m_CommandQueue && m_SwapChain && m_SwapChainRtvHeap &&
 		m_CommandList && m_CommandAllocators[0] && m_Fence && m_FenceEvent;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE RendererFactory::GetCurrentBackBufferRtv() const
 {
-	return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_RtvHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_RtvDescriptorSize);
+	return CD3DX12_CPU_DESCRIPTOR_HANDLE(m_SwapChainRtvHeap->GetCPUDescriptorHandleForHeapStart(), m_FrameIndex, m_SwapChainRtvDescriptorSize);
 }
 
 void RendererFactory::BeginFrame()

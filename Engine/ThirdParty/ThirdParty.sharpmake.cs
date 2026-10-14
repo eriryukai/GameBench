@@ -68,6 +68,7 @@ public class ShaderMakeTool : Project
 public class ImGui : Project
 {
     public ImGui()
+        : base(typeof(GameBenchTarget))
     {
         Name = "ImGui";
         SourceRootPath = @"[project.SharpmakeCsPath]\imgui";
@@ -81,15 +82,12 @@ public class ImGui : Project
             @"imgui_widgets.cpp",
             @"imconfig.h",
             @"imgui_internal.h",
-            @"backends\imgui_impl_win32.cpp", @"backends\imgui_impl_win32.h",
+            @"backends\imgui_impl_glfw.cpp", @"backends\imgui_impl_glfw.h",
             @"backends\imgui_impl_dx12.cpp", @"backends\imgui_impl_dx12.h"
         });
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
-        AddTargets(new Target(
-            Platform.win64,
-            DevEnv.vs2026,
-            Optimization.Debug | Optimization.Release));
+        AddTargets(new GameBenchTarget());
     }
 
     [Configure]
@@ -103,6 +101,7 @@ public class ImGui : Project
 
         conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\imgui");
         conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\imgui\backends");
+        conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\GLFW\Window\include");
 
         conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
         conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);

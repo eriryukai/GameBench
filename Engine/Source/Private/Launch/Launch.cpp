@@ -34,6 +34,7 @@ Application* CreateApplication(int argc, char** argv)
 	Specification.Window.SetResizable(true);
 	Specification.Window.SetDecorated(true);
 	Specification.VSync = true;
+	Specification.bEnabledImGui = true;
 
 	return new Engine(Specification);
 }

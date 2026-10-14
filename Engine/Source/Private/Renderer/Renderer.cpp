@@ -3,6 +3,8 @@
 #include "stdafx.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RendererFactory.h"
+#include "Renderer/ImGui/ImGuiRenderer.h"
+#include "OS/Window/Window.h"
 
 Renderer::Renderer()
 {
@@ -31,6 +33,27 @@ void Renderer::Initialize(Window* window)
 		return;
 	}
 
+	// The overlay borrows the window and the RHI's device/queue. It owns its own SRV heap.
+	if (window)
+	{
+		ImGuiSpecification ImGuiSpec;
+		ImGuiSpec.bEnabledKeyboardControls = true;
+		ImGuiSpec.bShowDemoWindow = true;
+		ImGuiSpec.WindowHandle = window->GetNativeHandle();
+		ImGuiSpec.Device = m_RendererFactory->GetDevice();
+		ImGuiSpec.CommandQueue = m_RendererFactory->GetCommandQueue();
+		ImGuiSpec.NumFramesInFlight = m_RendererFactory->GetFramesInFlight();
+		ImGuiSpec.RTVFormat = m_RendererFactory->GetRTVFormat();
+		ImGuiSpec.DSVFormat = DXGI_FORMAT_UNKNOWN;
+
+		m_ImGuiRenderer = std::make_unique<ImGuiRenderer>();
+		if (!m_ImGuiRenderer->Initialize(ImGuiSpec))
+		{
+			std::print("[Renderer] Failed to initialize the ImGui overlay.\n");
+			m_ImGuiRenderer.reset();
+		}
+	}
+
 	bInitialize = true;
 }
 
@@ -40,6 +63,9 @@ void Renderer::UnInitialize()
 	{
 		return;
 	}
+
+	// Tear down the overlay before the RHI resources it borrows (device, heap, window).
+	m_ImGuiRenderer.reset();
 
 	if (m_RendererFactory)
 	{
@@ -72,6 +98,18 @@ void Renderer::Present()
 	{
 		m_RendererFactory->PresentFrame();
 	}
+}
+
+void Renderer::RenderImGui()
+{
+	if (!m_ImGuiRenderer || !m_ImGuiRenderer->IsInitialized() || !m_RendererFactory)
+	{
+		return;
+	}
+
+	m_ImGuiRenderer->BeginFrame();
+	m_ImGuiRenderer->Render();
+	m_ImGuiRenderer->EndFrame(m_RendererFactory->GetCommandList());
 }
 
 bool Renderer::InitializeRHI()

@@ -41,6 +41,8 @@ public:
 	ID3D12Device* GetDevice() const { return m_Device.Get(); }
 	ID3D12CommandQueue* GetCommandQueue() const { return m_CommandQueue.Get(); }
 	ID3D12GraphicsCommandList* GetCommandList() const { return m_CommandList.Get(); }
+	DXGI_FORMAT GetRTVFormat() const { return m_RtvFormat; }
+	UINT GetFramesInFlight() const { return FrameCount; }
 
 	UINT GetWindowDimensionsWidth() const { return m_Width; }
 	UINT GetWindowDimensionsHeight() const { return m_Height; }
@@ -58,13 +60,13 @@ protected:
 	Microsoft::WRL::ComPtr<ID3D12Device>         m_Device;
 	Microsoft::WRL::ComPtr<ID3D12CommandQueue>   m_CommandQueue;
 	Microsoft::WRL::ComPtr<IDXGISwapChain3>      m_SwapChain;
-	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_RtvHeap;
+	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_SwapChainRtvHeap;
 	Microsoft::WRL::ComPtr<ID3D12Resource>       m_RenderTargets[FrameCount];
 	Microsoft::WRL::ComPtr<ID3D12CommandAllocator>    m_CommandAllocators[FrameCount];
 	Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> m_CommandList;
 	Microsoft::WRL::ComPtr<ID3D12RootSignature> m_RootSignature;
 	Microsoft::WRL::ComPtr<ID3D12PipelineState> m_PipelineState;
-	UINT m_RtvDescriptorSize = 0;
+	UINT m_SwapChainRtvDescriptorSize = 0;
 	DXGI_FORMAT m_RtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
 	// Synchronization objects.
