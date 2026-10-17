@@ -1,11 +1,14 @@
+// Copyright (c) CreationArt. All Rights Reserved.
+
 #nullable enable
 using System.Threading;
 using System.Windows.Input;
 using Avalonia.Media.Imaging;
-using GameBench.Editor;
+using GameBench.Editor.Managed.Styling;
+using GameBench.Editor.Managed.ViewModels;
 using ReactiveUI;
 
-namespace GameBench.Editor.SplashScreen.ViewModels;
+namespace GameBench.Editor.Managed.UI.SplashScreen.ViewModels;
 
 public class SplashScreenViewModel : ViewModelBase
 {

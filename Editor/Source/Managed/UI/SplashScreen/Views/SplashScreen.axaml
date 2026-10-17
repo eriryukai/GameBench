@@ -1,6 +1,7 @@
+<!-- Copyright (c) CreationArt. All Rights Reserved. -->
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:vm="using:GameBench.Editor.SplashScreen.ViewModels"
+        xmlns:vm="using:GameBench.Editor.Managed.UI.SplashScreen.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
@@ -15,7 +16,7 @@
         TransparencyLevelHint="Transparent"
         Background="Transparent"
         Topmost="True"
-        x:Class="GameBench.Editor.SplashScreen.Views.SplashScreen"
+        x:Class="GameBench.Editor.Managed.UI.SplashScreen.Views.SplashScreen"
         Title="MortarEngine">
     <Grid RowDefinitions="*,Auto" Margin="28,22,28,16">
         <!-- Brand lockup: the white mark tinted brand red plus the wordmark as real text.

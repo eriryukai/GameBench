@@ -1,3 +1,5 @@
+// Copyright (c) CreationArt. All Rights Reserved.
+
 #nullable enable
 using System;
 using Avalonia;
@@ -10,7 +12,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Dock.Avalonia.Controls;
 
-namespace GameBench.Editor;
+namespace GameBench.Editor.Managed.Styling;
 
 internal sealed class EditorStyles : Styles
 {

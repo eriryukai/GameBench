@@ -1,0 +1,33 @@
+<!-- Copyright (c) CreationArt. All Rights Reserved. -->
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="using:GameBench.Editor.Managed.UI"
+        xmlns:tb="using:GameBench.Editor.Managed.UI.TitleBar"
+        xmlns:toolbar="using:GameBench.Editor.Managed.UI.Toolbar"
+        xmlns:dock="using:Dock.Avalonia.Controls"
+        x:DataType="ui:MainWindowViewModel"
+        x:Class="GameBench.Editor.Managed.UI.MainWindow"
+        Title="{Binding Title}"
+        Width="1500"
+        Height="900"
+        MinWidth="1100"
+        MinHeight="720"
+        WindowStartupLocation="CenterScreen"
+        UseLayoutRounding="True"
+        Background="{StaticResource EditorWindowBackground}"
+        WindowDecorations="BorderOnly">
+    <Border x:Name="ChromeRoot" Background="{StaticResource EditorWindowBackground}">
+        <DockPanel LastChildFill="True">
+            <tb:TitleBar DockPanel.Dock="Top" DataContext="{Binding TitleBar}" />
+            <toolbar:MainToolbar DockPanel.Dock="Top" />
+            <Border Background="{StaticResource EditorWindowBackground}" Padding="4,4,4,0">
+                <dock:DockControl Factory="{Binding Factory}"
+                                  Layout="{Binding Layout}"
+                                  InitializeFactory="True"
+                                  InitializeLayout="False"
+                                  IsDockingEnabled="True" />
+            </Border>
+        </DockPanel>
+    </Border>
+</Window>
+

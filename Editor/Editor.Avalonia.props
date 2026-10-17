@@ -1,5 +1,5 @@
 <Project>
   <ItemGroup>
-    <AvaloniaXaml Include="$(MSBuildProjectDirectory)\..\..\Source\SplashScreen\Views\SplashScreen.axaml" />
+    <AvaloniaXaml Include="$(MSBuildProjectDirectory)\..\..\Source\**\*.axaml" />
   </ItemGroup>
 </Project>

@@ -1,0 +1,30 @@
+<!-- Copyright (c) CreationArt. All Rights Reserved. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="using:GameBench.Editor.Managed.UI.Toolbar"
+             x:DataType="vm:TransportViewModel"
+             x:Class="GameBench.Editor.Managed.UI.Toolbar.TransportControls">
+    <Button Classes="toolbar"
+            VerticalAlignment="Center"
+            Cursor="Hand"
+            Command="{Binding ToggleCommand}"
+            ToolTip.Tip="{Binding ToolTip}">
+        <StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+            <Panel>
+                <Image Source="{Binding Icon}"
+                       Width="14"
+                       Height="14"
+                       Stretch="Uniform"
+                       IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <Path Data="{Binding IconPath}"
+                      Fill="{StaticResource EditorText}"
+                      Width="14"
+                      Height="14"
+                      Stretch="Uniform"
+                      Margin="4,0"
+                      IsVisible="{Binding Icon, Converter={x:Static ObjectConverters.IsNull}}" />
+            </Panel>
+            <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+        </StackPanel>
+    </Button>
+</UserControl>

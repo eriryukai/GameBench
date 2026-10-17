@@ -1,3 +1,5 @@
+// Copyright (c) CreationArt. All Rights Reserved.
+
 #nullable enable
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,8 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 
-namespace GameBench.Editor;
+namespace GameBench.Editor.Managed.Styling;
+
 internal static class EditorTheme
 {
     // --- Surfaces (dark -> light layering) ---

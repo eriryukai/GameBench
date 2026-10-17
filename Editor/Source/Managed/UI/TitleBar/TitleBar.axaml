@@ -1,0 +1,49 @@
+<!-- Copyright (c) CreationArt. All Rights Reserved. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:tb="using:GameBench.Editor.Managed.UI.TitleBar"
+             xmlns:mb="using:GameBench.Editor.Managed.UI.MenuBar"
+             xmlns:cap="using:GameBench.Editor.Managed.UI.Caption"
+             xmlns:notif="using:GameBench.Editor.Managed.UI.Notifications"
+             xmlns:vm="using:GameBench.Editor.Managed.UI.TitleBar"
+             x:DataType="vm:TitleBarViewModel"
+             x:Class="GameBench.Editor.Managed.UI.TitleBar.TitleBar">
+    <!-- Hazel's UI_DrawTitlebar: a 57px bar filled with the titlebar colour, overlaid by a
+         380px-wide horizontal gradient from the running-state colour back to the titlebar. -->
+    <Border Height="57"
+            Background="{StaticResource EditorTitleBar}"
+            BorderBrush="{StaticResource EditorBorderSubtle}"
+            BorderThickness="0,0,0,1">
+        <Panel>
+            <!-- Behind the content and hit-test transparent so it never eats a click. The
+                 gradient itself is driven from the code-behind against EditorState. -->
+            <Border x:Name="StateGradient"
+                    Width="380"
+                    HorizontalAlignment="Left"
+                    VerticalAlignment="Stretch"
+                    IsHitTestVisible="False" />
+            <DockPanel LastChildFill="True">
+                <StackPanel x:Name="BrandRegion"
+                            DockPanel.Dock="Left"
+                            Orientation="Horizontal"
+                            Spacing="8"
+                            VerticalAlignment="Center"
+                            Margin="14,0,8,0">
+                    <tb:BrandMark />
+                    <TextBlock Text="MORTARENGINE"
+                               VerticalAlignment="Center"
+                               FontWeight="Bold"
+                               FontSize="13"
+                               Foreground="{StaticResource EditorTextBright}"
+                               Margin="0,0,4,0" />
+                </StackPanel>
+                <mb:MainMenu DockPanel.Dock="Left" />
+                <cap:WindowCaption DockPanel.Dock="Right" DataContext="{Binding Caption}" />
+                <notif:NotificationsButton DockPanel.Dock="Right" DataContext="{Binding Notifications}" />
+                <!-- Transparent fill that carries the move / maximize gestures for the empty
+                     title-bar space between the menu and the action row. -->
+                <Border x:Name="DragSpacer" Background="Transparent" />
+            </DockPanel>
+        </Panel>
+    </Border>
+</UserControl>

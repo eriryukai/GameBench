@@ -1,0 +1,21 @@
+<!-- Copyright (c) CreationArt. All Rights Reserved. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="using:GameBench.Editor.Managed.UI"
+             xmlns:toolbar="using:GameBench.Editor.Managed.UI.Toolbar"
+             x:DataType="ui:MainWindowViewModel"
+             x:Class="GameBench.Editor.Managed.UI.Toolbar.MainToolbar">
+    <!-- Transport on its own row under the title bar. -->
+    <Border Height="44"
+            Background="{StaticResource EditorWindowBackground}"
+            BorderBrush="{StaticResource EditorBorderSubtle}"
+            BorderThickness="0,0,0,1"
+            Padding="12,0">
+        <StackPanel Orientation="Horizontal"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Spacing="8">
+            <toolbar:TransportControls DataContext="{Binding Transport}" />
+        </StackPanel>
+    </Border>
+</UserControl>

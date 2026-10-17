@@ -1,9 +1,16 @@
+// Copyright (c) CreationArt. All Rights Reserved.
+
 #nullable enable
 using System;
 using Avalonia;
 using ReactiveUI.Avalonia;
+using GameBench.Editor.Managed.Core;
+
 namespace GameBench.Editor;
 
+// The managed entry point. Unlike every other file it deliberately sits outside
+// Managed/ and Native/: it is the counterpart of LaunchWindows.cpp and only knows
+// how to boot the Avalonia app.
 internal static class Program
 {
     [STAThread]
@@ -14,7 +21,7 @@ internal static class Program
 
     private static AppBuilder BuildAvaloniaApp()
     {
-        return AppBuilder.Configure<App>()
+        return AppBuilder.Configure<EditorApp>()
             .UsePlatformDetect()
             .With(new Win32PlatformOptions
             {

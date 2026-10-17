@@ -1,9 +1,11 @@
+// Copyright (c) CreationArt. All Rights Reserved.
+
 #nullable enable
 using Avalonia;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 
-namespace GameBench.Editor;
+namespace GameBench.Editor.Managed.Styling;
 
 internal static class EditorIcons
 {

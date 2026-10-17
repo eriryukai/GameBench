@@ -1,0 +1,56 @@
+<!-- Copyright (c) CreationArt. All Rights Reserved. -->
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:sys="using:System"
+             xmlns:vm="using:GameBench.Editor.Managed.UI.Notifications"
+             x:DataType="vm:NotificationsViewModel"
+             x:Class="GameBench.Editor.Managed.UI.Notifications.NotificationsButton">
+    <Button Classes="toolbar"
+            VerticalAlignment="Center"
+            Cursor="Hand"
+            ToolTip.Tip="Notifications">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <Path Data="{Binding BellIcon}"
+                  Fill="{StaticResource EditorText}"
+                  Width="14"
+                  Height="14"
+                  Stretch="Uniform"
+                  Margin="4,0" />
+            <TextBlock Text="{Binding CountText}"
+                       VerticalAlignment="Center"
+                       FontSize="11"
+                       FontWeight="Bold"
+                       Foreground="{StaticResource EditorAccent}"
+                       IsVisible="{Binding HasNotifications}" />
+        </StackPanel>
+        <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedRight">
+                <StackPanel Width="320" Spacing="6">
+                    <TextBlock Text="Notifications"
+                               FontSize="11"
+                               FontWeight="Bold"
+                               Foreground="{StaticResource EditorTextMuted}" />
+                    <TextBlock Text="No notifications"
+                               FontSize="12"
+                               Foreground="{StaticResource EditorTextMuted}"
+                               IsVisible="{Binding !HasNotifications}" />
+                    <ScrollViewer MaxHeight="320" IsVisible="{Binding HasNotifications}">
+                        <ItemsControl ItemsSource="{Binding Items}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="sys:String">
+                                    <TextBlock Text="{Binding}"
+                                               TextWrapping="Wrap"
+                                               Margin="2,1" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <Button Classes="toolbar"
+                            Content="Clear"
+                            Command="{Binding ClearCommand}"
+                            IsVisible="{Binding HasNotifications}" />
+                </StackPanel>
+            </Flyout>
+        </Button.Flyout>
+    </Button>
+</UserControl>
