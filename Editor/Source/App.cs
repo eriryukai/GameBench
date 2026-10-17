@@ -6,8 +6,8 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
-using AvaloniaSplashScreenDemo.ViewModels;
-using AvaloniaSplashScreenDemo.Views;
+using GameBench.Editor.SplashScreen.ViewModels;
+using SplashScreenView = GameBench.Editor.SplashScreen.Views.SplashScreen;
 using Dock.Avalonia.Themes;
 using Dock.Avalonia.Themes.Fluent;
 using System;
@@ -57,16 +57,35 @@ internal sealed class App : Application
 
     public async void PostInitialize(IClassicDesktopStyleApplicationLifetime desktop)
     {
-        var splashScreen = new SplashScreen
+        desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
+
+        var splashVM = new SplashScreenViewModel();
+        var splashScreen = new SplashScreenView
         {
-            DataContext = new SplashScreenViewModel()
+            DataContext = splashVM
         };
         desktop.MainWindow = splashScreen;
         splashScreen.Show();
-        desktop.ShutdownMode = ShutdownMode.OnMainWindowClose;
 
         // Run startup work behind the splash screen, then build the real editor window.
-        var mainWindow = await CreateMainWindowAsync((SplashScreenViewModel)splashScreen.DataContext);
+        MainWindow? mainWindow = null;
+        try
+        {
+            mainWindow = await CreateMainWindowAsync(splashVM);
+        }
+        catch (Exception error)
+        {
+            System.Diagnostics.Trace.WriteLine(error);
+        }
+
+        if (mainWindow == null || splashVM.CancellationToken.IsCancellationRequested)
+        {
+            // Startup was cancelled (or failed) before the editor was ready: drop the splash
+            // and shut the application down instead of opening the editor anyway.
+            splashScreen.Close();
+            desktop.Shutdown();
+            return;
+        }
 
         desktop.MainWindow = mainWindow;
         splashScreen.Close();
@@ -88,11 +107,14 @@ internal sealed class App : Application
         base.OnFrameworkInitializationCompleted();
     }
 
-    private static async Task<MainWindow> CreateMainWindowAsync(SplashScreenViewModel splashVM)
+    private static async Task<MainWindow?> CreateMainWindowAsync(SplashScreenViewModel splashVM)
     {
         string[] steps = { "Loading engine...", "Preparing workspace...", "Starting editor..." };
-        for (int i = 0; i < steps.Length && !splashVM.CancellationToken.IsCancellationRequested; i++)
+        for (int i = 0; i < steps.Length; i++)
         {
+            if (splashVM.CancellationToken.IsCancellationRequested)
+                return null;
+
             splashVM.StartupMessage = steps[i];
             try
             {
@@ -102,7 +124,7 @@ internal sealed class App : Application
             }
             catch (OperationCanceledException)
             {
-                break;
+                return null;
             }
         }
 
