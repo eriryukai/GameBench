@@ -76,7 +76,16 @@ namespace GameBench
             *   DX12   : "<TargetDir>\Shaders\DXIL\<Name>_<Entry>.dxil"
             */
             conf.EventPreBuildDescription = "Compiling shaders with ShaderMake (SPIR-V + DXIL)";
-            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" ""$(VULKAN_SDK)\Bin\dxc.exe"" SPIRV");
+            /* The dxc argument selects the compiler; the .bat resolves it because each
+            * backend needs a different DXC build:
+            *   SPIRV -> "vulkan": a DXC with SPIR-V codegen (LunarG Vulkan SDK). If none
+            *            is installed the pass is skipped with a warning, since only the
+            *            DX12 backend loads DXIL blobs today.
+            *   DXIL  -> "auto": the Windows SDK DXC, which ships the adjacent dxil.dll
+            *            needed to sign DXIL. Never pass "$(VULKAN_SDK)\Bin\dxc.exe" here:
+            *            when VULKAN_SDK is unset MSBuild expands it to "\Bin\dxc.exe".
+            */
+            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" vulkan SPIRV");
             conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" auto DXIL");
         }
 

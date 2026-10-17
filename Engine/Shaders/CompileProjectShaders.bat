@@ -14,15 +14,65 @@ set "shader_dir_inc=%~dp0."
 if "%output_dir%"=="" set "output_dir=%~dp0..\Binaries\Shaders"
 if "%configuration%"=="" set "configuration=Debug"
 if "%shadermake%"=="" set "shadermake=%~dp0..\ThirdParty\ShaderMake\Binaries\win64_%configuration%\ShaderMake.exe"
-if "%dxc%"=="" set "dxc=%VULKAN_SDK%\Bin\dxc.exe"
 if "%platform%"=="" set "platform=SPIRV"
 
-rem "auto" asks us to locate the Windows SDK's dxc.exe. Only that DXC ships the
-rem adjacent dxil.dll needed to sign DXIL (the Vulkan SDK's dxc.exe does not), so
-rem it is required for the DX12 backend. Scan the Windows Kits bin folders and pick
-rem the newest x64 dxc.exe.
-if /i "%dxc%"=="auto" call :find_windows_dxc
+rem ---------------------------------------------------------------------------
+rem Resolve the DXC compiler for the requested platform.
+rem
+rem The two backends need two *different* DXC builds and this is the whole reason
+rem the dxc argument is resolved here instead of at the call site:
+rem
+rem   DXIL  ("auto")  -> a DXC shipping an adjacent dxil.dll so the bytecode can
+rem                      be signed (D3D12 rejects unsigned DXIL). That is the
+rem                      Windows SDK's dxc.exe, or the official DXC release.
+rem   SPIRV ("vulkan") -> a DXC built with -DENABLE_SPIRV_CODEGEN=ON. The Windows
+rem                      SDK build does NOT have it ("SPIR-V CodeGen not
+rem                      available"), so the Vulkan SDK's dxc.exe is required.
+rem
+rem Argument contract for %5:
+rem   auto           -> resolve the Windows SDK DXC (DXIL only)
+rem   vulkan / empty -> resolve a SPIR-V capable DXC (falls back to VULKAN_SDK)
+rem   <path>         -> use that dxc.exe as-is
+rem ---------------------------------------------------------------------------
+if /i "%platform%"=="DXIL" goto :resolve_dxil
+goto :resolve_spirv
 
+:resolve_dxil
+if /i "%dxc%"=="auto" set "dxc="
+if not defined dxc call :find_windows_dxc
+if not defined dxc (
+    echo ERROR: Could not locate a DXC that can sign DXIL ^(needs an adjacent dxil.dll^).
+    echo        Install the Windows 10/11 SDK, or pass an explicit dxc.exe path.
+    goto :failed
+)
+goto :check_tools
+
+:resolve_spirv
+if /i "%dxc%"=="vulkan" set "dxc="
+if not defined dxc if defined GAMEBENCH_DXC set "dxc=%GAMEBENCH_DXC%"
+rem A quoted "%%VULKAN_SDK%%\Bin\dxc.exe" with VULKAN_SDK unset expands to the
+rem nonsense "\Bin\dxc.exe"; the existence check below discards it.
+if not defined dxc set "dxc=%VULKAN_SDK%\Bin\dxc.exe"
+if not exist "%dxc%" set "dxc="
+if not defined dxc call :find_vulkan_dxc
+
+if not defined dxc (
+    rem The Windows SDK DXC cannot emit SPIR-V, so without the Vulkan SDK this
+    rem pass is impossible. The DXIL pass above still produced shippable blobs and
+    rem the runtime currently only loads DXIL, so skip instead of failing the build.
+    echo WARNING: No SPIR-V capable DXC ^(Vulkan SDK^) found - skipping the SPIR-V pass.
+    echo          DXIL shaders were still compiled and are what the DX12 runtime loads.
+    echo          Install the LunarG Vulkan SDK, or set VULKAN_SDK / GAMEBENCH_DXC to a
+    echo          dxc.exe built with SPIR-V codegen, to re-enable Vulkan shaders.
+    if defined GAMEBENCH_REQUIRE_SPIRV (
+        echo ERROR: GAMEBENCH_REQUIRE_SPIRV is set, refusing to skip SPIR-V compilation.
+        goto :failed
+    )
+    goto :done
+)
+goto :check_tools
+
+:check_tools
 if not exist "%shadermake%" (
     echo ERROR: ShaderMake was not found at "%shadermake%".
     goto :failed
@@ -96,8 +146,25 @@ if not defined found (
 )
 
 endlocal & set "dxc=%found%"
-if not defined dxc (
-    echo ERROR: Could not locate a Windows SDK dxc.exe ^(with dxil.dll^) for DXIL compilation.
-    echo        Install the Windows 10/11 SDK, or pass an explicit dxc.exe path.
+exit /b 0
+
+rem ---------------------------------------------------------------------------
+rem :find_vulkan_dxc
+rem Resolves %dxc% to a SPIR-V capable dxc.exe. Only called when neither an
+rem explicit path nor %VULKAN_SDK% produced one, so this is purely a best-effort
+rem sweep of the LunarG default install locations (newest SDK wins).
+rem ---------------------------------------------------------------------------
+:find_vulkan_dxc
+setlocal enabledelayedexpansion
+set "found="
+
+for %%R in ("%ProgramFiles%\VulkanSDK" "%ProgramFiles(x86)%\VulkanSDK" "%SystemDrive%\VulkanSDK") do (
+    if not defined found if exist "%%~R" (
+        for /f "delims=" %%D in ('dir /b /ad /o-n "%%~R" 2^>nul') do (
+            if not defined found if exist "%%~R\%%D\Bin\dxc.exe" set "found=%%~R\%%D\Bin\dxc.exe"
+        )
+    )
 )
+
+endlocal & set "dxc=%found%"
 exit /b 0
