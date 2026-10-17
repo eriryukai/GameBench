@@ -14,6 +14,7 @@ class Window;
 struct ApplicationSpecification
 {
 	WindowSpecification Window;
+	bool bEnabledImGui = false;
 	bool VSync = true;
 };
 
