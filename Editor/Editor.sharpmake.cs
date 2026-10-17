@@ -15,9 +15,9 @@ namespace GameBench
             IsTargetFileNameToLower = false;
             ProjectSchema = CSharpProjectSchema.NetCore;
             CustomProperties["Platforms"] = "x64";
-            CustomProperties["Configurations"] = "Debug Editor;Release Editor";
+            CustomProperties["Configurations"] = "Debug;Release;Shipping";
             CustomProperties["PlatformTarget"] = "x64";
-            AddTargets(new GameBenchTarget(BuildMode.Editor).ManagedTarget);
+            AddTargets(new GameBenchTarget().ManagedTarget);
         }
 
         [Configure]
@@ -28,7 +28,11 @@ namespace GameBench
 
             conf.IntermediatePath = @"[project.SharpmakeCsPath]\Intermediate\Build\[project.Name]\[target.Platform]_[target.OutputFolder]";
             conf.TargetPath = @"[project.SharpmakeCsPath]\Binaries\[target.Platform]\[target.OutputFolder]";
-            conf.Output = Configuration.OutputType.DotNetWindowsApp;
+            conf.Output = target.IsShipping? Configuration.OutputType.DotNetWindowsApp : Configuration.OutputType.DotNetConsoleApp;
+            if (target.IsShipping)
+            {
+                conf.Defines.Add("GAMEBENCH_SHIPPING");
+            }
 
             //@TODO: Currently, disabling engine project as editor right now purely visual. Need to solve:
             //@TODO: Figure out a model, similiar to unreal engine that even with a game project we still have one application. 
@@ -44,7 +48,7 @@ namespace GameBench
                 StartArguments = ""
             };
             string BinariesDir = @"$(SolutionDir)Engine\Binaries\win64\$(Configuration)";
-            conf.EventPostBuild.Add($@"copy /Y ""{BinariesDir}\Engine.dll"" ""$(TargetDir)Engine.dll""");
+            conf.EventPostBuild.Add($@"copy /Y ""{BinariesDir}\Engine.exe"" ""$(TargetDir)Engine.exe""");
             conf.EventPostBuild.Add($@"if exist ""{BinariesDir}\Engine.pdb"" copy /Y ""{BinariesDir}\Engine.pdb"" ""$(TargetDir)Engine.pdb""");
             conf.EventPostBuild.Add($@"xcopy ""{BinariesDir}\Shaders"" ""$(TargetDir)Shaders"" /E /I /Y /D");
             conf.EventPostBuild.Add(@"xcopy ""$(SolutionDir)packages\Microsoft.Direct3D.D3D12.1.619.5\build\native\bin\x64\*.dll"" ""$(TargetDir)D3D12"" /I /Y /D");

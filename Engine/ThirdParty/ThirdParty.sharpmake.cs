@@ -1,11 +1,13 @@
 using Sharpmake;
 using System;
 using System.IO;
+using GameBench;
 
 [Export]
 public class DirectX12 : Project
 {
     public DirectX12()
+        : base(typeof(GameBenchTarget))
     {
         Name = "DirectX12";
 
@@ -13,10 +15,7 @@ public class DirectX12 : Project
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
 
-        AddTargets(new Target(
-            Platform.win64,
-            DevEnv.vs2026,
-            Optimization.Debug | Optimization.Release));
+        AddTargets(new GameBenchTarget());
     }
 
     [Configure]
@@ -35,6 +34,7 @@ public class DirectX12 : Project
 public class ShaderMakeTool : Project
 {
     public ShaderMakeTool()
+        : base(typeof(GameBenchTarget))
     {
         Name = "ShaderMake";
         SourceRootPath = @"[project.SharpmakeCsPath]\ShaderMake\ShaderMake";
@@ -45,10 +45,7 @@ public class ShaderMakeTool : Project
         });
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
-        AddTargets(new Target(
-            Platform.win64,
-            DevEnv.vs2026,
-            Optimization.Debug | Optimization.Release));
+        AddTargets(new GameBenchTarget());
     }
 
     [Configure]
