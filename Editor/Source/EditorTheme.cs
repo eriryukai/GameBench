@@ -71,6 +71,10 @@ internal static class EditorTheme
     // --- Colors (for places that need Color, not Brush) ---
     public static readonly Color TextColor = Color.Parse("#C0C0C0");
 
+    // --- Brand ---
+    // Brand red sampled from the MortarEngine logo asset, used to tint the white mark.
+    public static readonly Color BrandRed = Color.Parse("#E71925");
+
 
     // UI font: Inter is registered via WithInterFont() and reads as the default; named
     // here so headers/labels can opt in explicitly.
@@ -199,6 +203,10 @@ internal static class EditorTheme
             return source;
         }
     }
+
+    // Public wrapper for callers that need the tinted Bitmap itself (for example a view model
+    // exposing an Image.Source) rather than an Image control.
+    public static Bitmap? TintedBitmap(string relativePath, Color tint) => LoadTintedBitmap(relativePath, tint);
 
     public static Bitmap? LoadBitmap(string relativePath)
     {

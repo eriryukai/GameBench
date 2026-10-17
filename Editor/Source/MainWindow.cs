@@ -27,7 +27,7 @@ internal sealed class MainWindow : Window
         _viewModel = viewModel;
         DataContext = viewModel;
 
-        Title = $"GameBench Editor - {viewModel.ProjectName}";
+        Title = $"MortarEngine Editor - {viewModel.ProjectName}";
         Width = 1500;
         Height = 900;
         MinWidth = 1100;
@@ -116,7 +116,7 @@ internal sealed class MainWindow : Window
 
     private void TrySetWindowIcon()
     {
-        Bitmap? logo = EditorTheme.LoadBitmap("Editor/Hazel-IconLogo-2023.png");
+        Bitmap? logo = EditorTheme.LoadBitmap("Editor/MortarEngine_IconAppLogo.png");
         if (logo != null)
             Icon = new WindowIcon(logo);
     }
@@ -143,7 +143,7 @@ internal sealed class MainWindow : Window
                 CreateBrandMark(),
                 new TextBlock
                 {
-                    Text = "GAMEBENCH",
+                    Text = "MORTARENGINE",
                     VerticalAlignment = VerticalAlignment.Center,
                     FontWeight = FontWeight.Bold,
                     FontSize = 13,
@@ -209,17 +209,17 @@ internal sealed class MainWindow : Window
 
     private static Control CreateBrandMark()
     {
-        Bitmap? logo = EditorTheme.LoadBitmap("Editor/HazelLogo_Light.png");
+        Bitmap? logo = EditorTheme.LoadBitmap("Editor/MortarEngine_Logo.png");
         if (logo == null)
-            return EditorTheme.ImageIcon("Editor/HazelLogo_Light.png", "", EditorTheme.Accent, 24);
+            return EditorTheme.ImageIcon("Editor/MortarEngine_Logo.png", "", EditorTheme.Accent, 24);
 
         return new Image
         {
             Source = logo,
-            Width = 38,
-            Height = 45,
+            Width = 36,          // or 32–40 depending on how big you want it
+            Height = 36,         // keep it square
             Stretch = Stretch.Uniform,
-            Margin = new Thickness(0),
+            Margin = new Thickness(0, 0, 2, 0),
             VerticalAlignment = VerticalAlignment.Center
         };
     }
