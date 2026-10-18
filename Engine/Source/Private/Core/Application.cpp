@@ -4,6 +4,7 @@
 #include "Application.h"
 #include "OS/Window/Window.h"
 #include "Renderer/Renderer.h"
+#include "Renderer/RendererFactory.h"
 
 Application* Application::s_Instance = nullptr;
 
@@ -44,7 +45,6 @@ int Application::Initialize(void* PlatformData)
 	}
 
 	m_Renderer = std::make_unique<Renderer>();
-	m_Renderer->SetVSyncEnabled(m_Specification.VSync);
 	m_Renderer->Initialize(m_Window.get());
 	if (!m_Renderer->IsInitialized())
 	{
@@ -53,6 +53,8 @@ int Application::Initialize(void* PlatformData)
 		m_Window.reset();
 		return 1;
 	}
+
+	m_Renderer->GetFactory()->SetVSyncEnabled(m_Specification.VSync);
 
 	m_Initialized = true;
 	m_Running = true;
@@ -83,7 +85,31 @@ void Application::Tick()
 
 	if (m_Renderer)
 	{
-		m_Renderer->Tick();
+		if (!m_Renderer->IsInitialized())
+		{
+			return;
+		}
+
+		uint32_t width = 0, height = 0;
+		m_Window->PollFramebufferSize(width, height);
+		if (width == 0 || height == 0)
+		{
+			// Minimized or occluded: idle instead of spinning a 100% CPU loop.
+			m_Window->WaitEventsTimeout(0.05);
+			return;
+		}
+
+		if (m_Renderer->GetFactory()->GetWindowDimensionsWidth() != width ||
+			m_Renderer->GetFactory()->GetWindowDimensionsHeight() != height)
+		{
+			m_Renderer->GetFactory()->SetWindowDimensions(width, height);
+			m_Renderer->GetFactory()->ResizeSwapChain();
+		}
+
+		m_Renderer->BeginRender();
+		// @TODO: DrawCalls from game simulation to renderer.
+		m_Renderer->EndRender();
+		m_Renderer->Present();
 	}
 }
 
@@ -94,16 +120,15 @@ void Application::Shutdown()
 		return;
 	}
 
+	m_Renderer.reset();
+	m_Window.reset();
+
 	for (Layer* layer : m_LayerStack)
 	{
 		layer->OnDetach();
 		delete layer;
 	}
 	m_LayerStack.Clear();
-
-	// The renderer borrows the window, so it has to go first.
-	m_Renderer.reset();
-	m_Window.reset();
 
 	m_Initialized = false;
 }
