@@ -6,6 +6,7 @@ using Sharpmake;
 [module: Sharpmake.Include(@"Engine\Engine.sharpmake.cs")]
 [module: Sharpmake.Include(@"Editor\Editor.sharpmake.cs")]
 [module: Sharpmake.Include(@"Engine\ThirdParty\ThirdParty.sharpmake.cs")]
+[module: Sharpmake.Include(@"Tools\ScriptGen\ScriptGen.sharpmake.cs")]
 
 namespace GameBench
 {

@@ -66,6 +66,7 @@ namespace GameBench
 
             conf.AddPrivateDependency<DirectX12>(target);
             conf.AddPrivateDependency<ImGui>(target);
+            conf.AddPrivateDependency<ScriptGen>(target);
             conf.AddPrivateDependency<ShaderMakeTool>(target, DependencySetting.OnlyBuildOrder);
         }
 
