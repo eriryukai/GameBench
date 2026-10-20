@@ -60,12 +60,15 @@ void* WindowsWindow::Create(const WindowSpecification& Spec)
 		// decoder, so there is nothing that could turn the file into an HICON here.
 	}
 
-	ShowWindow(hwnd, SW_SHOW);
-	UpdateWindow(hwnd);
-
-	if (Spec.GetStartMaximized())
+	if (Spec.GetVisible())
 	{
-		ShowWindow(hwnd, SW_MAXIMIZE);
+		ShowWindow(hwnd, SW_SHOW);
+		UpdateWindow(hwnd);
+
+		if (Spec.GetStartMaximized())
+		{
+			ShowWindow(hwnd, SW_MAXIMIZE);
+		}
 	}
 
 	return static_cast<void*>(hwnd);

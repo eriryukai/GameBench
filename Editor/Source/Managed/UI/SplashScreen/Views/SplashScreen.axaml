@@ -50,18 +50,32 @@
         </StackPanel>
 
         <Grid Grid.Row="1" ColumnDefinitions="*,Auto" Margin="0,14,0,0">
-            <TextBlock Grid.Column="0"
-                       Text="{Binding StartupMessage}"
-                       FontSize="12"
-                       Foreground="#C0C0C0"
-                       HorizontalAlignment="Center"
-                       VerticalAlignment="Center">
-                <TextBlock.Effect>
-                    <DropShadowEffect BlurRadius="10" OffsetX="0" OffsetY="2" Opacity="0.85" Color="#000000" />
-                </TextBlock.Effect>
-            </TextBlock>
+            <StackPanel Grid.Column="0"
+                        Spacing="4"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center">
+                <TextBlock Text="{Binding StartupMessage}"
+                           FontSize="12"
+                           Foreground="#C0C0C0"
+                           HorizontalAlignment="Center">
+                    <TextBlock.Effect>
+                        <DropShadowEffect BlurRadius="10" OffsetX="0" OffsetY="2" Opacity="0.85" Color="#000000" />
+                    </TextBlock.Effect>
+                </TextBlock>
+                <TextBlock Text="{Binding ErrorMessage}"
+                           FontSize="11"
+                           Foreground="#F28B82"
+                           TextWrapping="Wrap"
+                           MaxWidth="320"
+                           HorizontalAlignment="Center"
+                           IsVisible="{Binding IsError}">
+                    <TextBlock.Effect>
+                        <DropShadowEffect BlurRadius="10" OffsetX="0" OffsetY="2" Opacity="0.85" Color="#000000" />
+                    </TextBlock.Effect>
+                </TextBlock>
+            </StackPanel>
             <Button Grid.Column="1"
-                    Content="Cancel"
+                    Content="{Binding CancelLabel}"
                     Command="{Binding CancelCommand}"
                     Padding="14,4"
                     FontSize="12" />

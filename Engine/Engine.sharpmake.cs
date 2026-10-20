@@ -93,9 +93,10 @@ namespace GameBench
         void ConfigureApplication(Configuration conf, GameBenchTarget target)
         {
             conf.Output = Configuration.OutputType.Exe;
-            conf.Defines.Add("WITH_EDITOR=0");
             conf.Defines.Add("NOMINMAX", "WIN32_LEAN_AND_MEAN");
             conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
+            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\Source\Interop");
+            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\ThirdParty\json\single_include");
             conf.SourceFilesBuildExcludeRegex.Add(@"[\\/]Editor[\\/]");
             if (target.IsShipping)
             {

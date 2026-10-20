@@ -2,6 +2,7 @@
 
 #include "stdafx.h"
 #include "Core/Application.h"
+#include "Launch/CommandLine.h"
 
 #if !defined(GAMEBENCH_PLATFORM_WINDOWS)
 #error "No platform defined. Define GAMEBENCH_PLATFORM_WINDOWS to 1 in PlatformConfig.h"
@@ -23,16 +24,26 @@ public:
 
 Application* CreateApplication(int argc, char** argv)
 {
-	(void)argc;
-	(void)argv;
+	FCommandLineOptions Options;
+	std::string CommandLineError;
+	if (!ParseCommandLine(argc, argv, Options, CommandLineError))
+	{
+		std::print(stderr, "[GameBench] {}\n", CommandLineError);
+		return nullptr;
+	}
+
+	const bool bEditorMode = Options.Mode == EApplicationMode::Editor;
 
 	ApplicationSpecification Specification;
-	Specification.Window.SetTitle("GameBench");
+	Specification.Mode = Options.Mode;
+	Specification.IpcPipeName = Options.IpcPipeName;
+	Specification.Window.SetTitle(bEditorMode ? "GameBench Engine (Editor)" : "GameBench");
 	Specification.Window.SetWidth(1280);
 	Specification.Window.SetHeight(720);
 	Specification.Window.SetStartMaximized(true);
 	Specification.Window.SetResizable(true);
 	Specification.Window.SetDecorated(true);
+	Specification.Window.SetVisible(Options.bShowWindow);
 	Specification.VSync = true;
 	Specification.bEnabledImGui = true;
 

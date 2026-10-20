@@ -1,4 +1,9 @@
 <Project>
+  <PropertyGroup>
+    <!-- The editor creates its windows in code (MainWindow is constructed with the
+         engine session), so the Avalonia runtime XAML loader is never used for them. -->
+    <NoWarn>$(NoWarn);AVLN3001</NoWarn>
+  </PropertyGroup>
   <ItemGroup>
     <AvaloniaXaml Include="$(MSBuildProjectDirectory)\..\..\Source\**\*.axaml" />
   </ItemGroup>

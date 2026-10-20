@@ -23,6 +23,7 @@ void* GLFWWindow::Create(const WindowSpecification& Spec)
 	glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	glfwWindowHint(GLFW_DECORATED, Spec.GetDecorated() ? GLFW_TRUE : GLFW_FALSE);
 	glfwWindowHint(GLFW_RESIZABLE, Spec.GetResizable() ? GLFW_TRUE : GLFW_FALSE);
+	glfwWindowHint(GLFW_VISIBLE, Spec.GetVisible() ? GLFW_TRUE : GLFW_FALSE);
 
 	GLFWmonitor* Monitor = Spec.GetFullscreen() ? glfwGetPrimaryMonitor() : nullptr;
 

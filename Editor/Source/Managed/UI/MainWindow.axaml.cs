@@ -7,6 +7,7 @@ using Avalonia.Controls;
 using Avalonia.Media.Imaging;
 using GameBench.Editor.Managed.Styling;
 using GameBench.Editor.Managed.UI.Caption;
+using GameBench.Editor.Native.Interop;
 
 namespace GameBench.Editor.Managed.UI;
 
@@ -19,13 +20,13 @@ public sealed partial class MainWindow : Window
     private bool _closing;
     private bool _allowClose;
 
-    public MainWindow()
+    public MainWindow(EngineSession session)
     {
         var caption = new WindowCaptionViewModel(
             minimize: () => WindowState = WindowState.Minimized,
             toggleMaximize: ToggleMaximize,
             close: Close);
-        _viewModel = new MainWindowViewModel(caption);
+        _viewModel = new MainWindowViewModel(caption, session);
         DataContext = _viewModel;
 
         InitializeComponent();

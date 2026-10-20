@@ -9,7 +9,6 @@ using GameBench.Editor.Managed.Core;
 using GameBench.Editor.Managed.Styling;
 using GameBench.Editor.Managed.ViewModels;
 using ReactiveUI;
-
 namespace GameBench.Editor.Managed.UI.Notifications;
 
 // Renders the title-bar notifications bell: the unread count, the flyout log and the
@@ -25,7 +24,7 @@ public sealed class NotificationsViewModel : ViewModelBase
         state.Notifications.CollectionChanged += OnNotificationsChanged;
     }
 
-    public ObservableCollection<string> Items => _state.Notifications;
+    public ObservableCollection<NotificationItem> Items => _state.Notifications;
 
     public bool HasNotifications => _state.Notifications.Count > 0;
 

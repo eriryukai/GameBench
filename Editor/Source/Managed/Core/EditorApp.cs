@@ -2,6 +2,7 @@
 
 #nullable enable
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
@@ -10,11 +11,13 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
+using Avalonia.Threading;
 using Dock.Avalonia.Themes;
 using Dock.Avalonia.Themes.Fluent;
 using GameBench.Editor.Managed.Styling;
 using GameBench.Editor.Managed.UI;
 using GameBench.Editor.Managed.UI.SplashScreen.ViewModels;
+using GameBench.Editor.Native.Interop;
 using SplashScreenView = GameBench.Editor.Managed.UI.SplashScreen.Views.SplashScreen;
 
 namespace GameBench.Editor.Managed.Core;
@@ -73,10 +76,21 @@ internal sealed class EditorApp : Application
             System.Diagnostics.Trace.WriteLine(error);
         }
 
-        if (mainWindow == null || splashViewModel.CancellationToken.IsCancellationRequested)
+        if (mainWindow == null)
         {
-            // Startup was cancelled (or failed) before the editor was ready: drop the splash
-            // and shut the application down instead of opening the editor anyway.
+            // Startup failed: keep the splash up (it carries the error message) until
+            // the user quits. A cancellation closes it straight away.
+            if (splashViewModel.IsError && !splashViewModel.CancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    await Task.Delay(Timeout.Infinite, splashViewModel.CancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                }
+            }
+
             splashScreen.Close();
             desktop.Shutdown();
             return;
@@ -89,26 +103,48 @@ internal sealed class EditorApp : Application
 
     private static async Task<MainWindow?> CreateMainWindowAsync(SplashScreenViewModel splashViewModel)
     {
-        string[] steps = { "Loading engine...", "Preparing workspace...", "Starting editor..." };
-        for (int i = 0; i < steps.Length; i++)
-        {
-            if (splashViewModel.CancellationToken.IsCancellationRequested)
-                return null;
+        var cancellationToken = splashViewModel.CancellationToken;
+        var session = new EngineSession();
 
-            splashViewModel.StartupMessage = steps[i];
-            try
-            {
-                //@TODO: This is where the IPC connection and server should spins up. Once we have a valid client connection,
-                //       shuts down the SplashScreen
-                await Task.Delay(TimeSpan.FromSeconds(2), splashViewModel.CancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                return null;
-            }
+        // Engine startup progress feeds the splash; it runs on a background thread,
+        // so hop back to the UI thread before touching the view model.
+        session.Progress += (_, progress) =>
+            Dispatcher.UIThread.Post(() => splashViewModel.StartupMessage = progress.Message);
+
+        splashViewModel.StartupMessage = "Starting engine...";
+
+        try
+        {
+            await session.StartAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+            await session.DisposeAsync();
+            return null;
+        }
+        catch (EngineStartupException error)
+        {
+            splashViewModel.IsError = true;
+            splashViewModel.ErrorMessage = error.Message;
+            await session.DisposeAsync();
+            return null;
+        }
+        catch (Exception error)
+        {
+            System.Diagnostics.Trace.WriteLine(error);
+            splashViewModel.IsError = true;
+            splashViewModel.ErrorMessage = $"Engine startup failed: {error.Message}";
+            await session.DisposeAsync();
+            return null;
         }
 
-        return new MainWindow();
+        if (cancellationToken.IsCancellationRequested)
+        {
+            await session.DisposeAsync();
+            return null;
+        }
+
+        return new MainWindow(session);
     }
 
     private void SetupStyles()

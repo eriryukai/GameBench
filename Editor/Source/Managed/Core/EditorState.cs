@@ -3,6 +3,7 @@
 #nullable enable
 using System;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 using GameBench.Editor.Managed.ViewModels;
 using ReactiveUI;
 
@@ -21,9 +22,12 @@ public sealed class EditorState : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref _isPlaying, value);
     }
 
-    // Status messages land here newest-first and render in the title-bar notifications bell.
-    public ObservableCollection<string> Notifications { get; } = new();
+    // Notifications land here newest-first and render in the title-bar bell.
+    public ObservableCollection<NotificationItem> Notifications { get; } = new();
+
+    public void AddNotification(string text, string? actionLabel = null, ICommand? action = null) =>
+        Notifications.Insert(0, new NotificationItem(text, actionLabel, action));
 
     public void ReportStatus(string status) =>
-        Notifications.Insert(0, $"[{DateTime.Now:HH:mm:ss}] {status}");
+        AddNotification($"[{DateTime.Now:HH:mm:ss}] {status}");
 }

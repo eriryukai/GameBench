@@ -6,6 +6,7 @@
 #include "Core/Runtime.h"
 
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <io.h>
 #include <fcntl.h>
@@ -32,6 +33,21 @@ static void SetupConsole()
 	SetConsoleOutputCP(CP_UTF8);
 	SetConsoleTitleW(L"GameBench");
 }
+
+// The editor spawns Engine.exe with redirected stdout/stderr. Attaching a
+// console would point the CRT streams at CONOUT$ and break that capture, so
+// only console-attach for manual launches.
+static bool IsEditorInvocation(int argc, char** argv)
+{
+	for (int Index = 1; Index < argc; ++Index)
+	{
+		if (std::strcmp(argv[Index], "--editor") == 0)
+		{
+			return true;
+		}
+	}
+	return false;
+}
 #endif
 
 int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPSTR lpCmdLine, _In_ int nCmdShow)
@@ -41,7 +57,10 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	(void)nCmdShow;
 
 #if !defined(GAMEBENCH_SHIPPING)
-	SetupConsole();
+	if (!IsEditorInvocation(__argc, __argv))
+	{
+		SetupConsole();
+	}
 #endif
 
 	void* PlatformData = static_cast<void*>(hInstance);

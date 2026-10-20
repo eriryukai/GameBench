@@ -17,6 +17,7 @@ struct WindowSpecification
 	void SetResizable(bool bInResizable) { Resizable = bInResizable; }
 	void SetStartMaximized(bool bInStartMaximized) { StartMaximized = bInStartMaximized; }
 	void SetIconPath(const std::filesystem::path& InIconPath) { IconPath = InIconPath; }
+	void SetVisible(bool bInVisible) { Visible = bInVisible; }
 
 	const std::string& GetTitle() const { return Title; }
 	uint32_t GetWidth() const { return Width; }
@@ -27,6 +28,7 @@ struct WindowSpecification
 	bool GetResizable() const { return Resizable; }
 	bool GetStartMaximized() const { return StartMaximized; }
 	const std::filesystem::path& GetIconPath() const { return IconPath; }
+	bool GetVisible() const { return Visible; }
 
 private:
 	std::string Title;
@@ -37,5 +39,6 @@ private:
 	bool Fullscreen = false;
 	bool Resizable = true;
 	bool StartMaximized = false;
+	bool Visible = true;
 	std::filesystem::path IconPath;
 };

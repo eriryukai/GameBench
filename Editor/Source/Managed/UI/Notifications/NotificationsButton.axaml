@@ -1,7 +1,7 @@
 <!-- Copyright (c) CreationArt. All Rights Reserved. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:sys="using:System"
+             xmlns:core="using:GameBench.Editor.Managed.Core"
              xmlns:vm="using:GameBench.Editor.Managed.UI.Notifications"
              x:DataType="vm:NotificationsViewModel"
              x:Class="GameBench.Editor.Managed.UI.Notifications.NotificationsButton">
@@ -37,10 +37,18 @@
                     <ScrollViewer MaxHeight="320" IsVisible="{Binding HasNotifications}">
                         <ItemsControl ItemsSource="{Binding Items}">
                             <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="sys:String">
-                                    <TextBlock Text="{Binding}"
-                                               TextWrapping="Wrap"
-                                               Margin="2,1" />
+                                <DataTemplate x:DataType="core:NotificationItem">
+                                    <StackPanel Spacing="2" Margin="2,2,2,6">
+                                        <TextBlock Text="{Binding Text}"
+                                                   TextWrapping="Wrap" />
+                                        <Button Classes="toolbar"
+                                                Content="{Binding ActionLabel}"
+                                                Command="{Binding Action}"
+                                                IsVisible="{Binding HasAction}"
+                                                HorizontalAlignment="Left"
+                                                Padding="10,2"
+                                                FontSize="11" />
+                                    </StackPanel>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
