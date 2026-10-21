@@ -6,6 +6,8 @@
 #include "Renderer/Renderer.h"
 #include "Renderer/RendererFactory.h"
 
+#include <nfd.hpp>
+
 Application* Application::s_Instance = nullptr;
 
 Application::Application(const ApplicationSpecification& specification)
@@ -55,6 +57,14 @@ int Application::Initialize(void* PlatformData)
 	}
 
 	m_Renderer->GetFactory()->SetVSyncEnabled(m_Specification.VSync);
+
+	if (NFD::Init() != NFD_OKAY)
+	{
+		m_LastError = "Could not initialize file dialogs.";
+		m_Renderer.reset();
+		m_Window.reset();
+		return 1;
+	}
 
 	m_Initialized = true;
 	m_Running = true;
@@ -123,6 +133,8 @@ void Application::Shutdown()
 	{
 		return;
 	}
+
+	NFD::Quit();
 
 	m_Renderer.reset();
 	m_Window.reset();
