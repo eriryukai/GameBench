@@ -30,6 +30,28 @@ public class DirectX12 : Project
     }
 }
 
+[Export]
+public class Choc : Project
+{
+    public Choc()
+        : base(typeof(GameBenchTarget))
+    {
+        Name = "Choc";
+
+        SourceFilesExtensions.Clear();
+        IsFileNameToLower = false;
+        IsTargetFileNameToLower = false;
+
+        AddTargets(new GameBenchTarget());
+    }
+
+    [Configure]
+    public void ConfigureAll(Configuration conf, Target target)
+    {
+        conf.IncludePaths.Add(@"[project.SharpmakeCsPath]");
+    }
+}
+
 [Generate]
 public class ShaderMakeTool : Project
 {
@@ -110,5 +132,42 @@ public class ImGui : Project
         conf.Defines.Add("NOMINMAX");
 
         conf.AddPrivateDependency<DirectX12>(target);
+    }
+}
+
+[Generate]
+public class NFDExtended : Project
+{
+    public NFDExtended()
+        : base(typeof(GameBenchTarget))
+    {
+        Name = "NFD-Extended";
+        SourceRootPath = @"[project.SharpmakeCsPath]\nativefiledialog-extended\src";
+        SourceFilesExtensions.Clear();
+        SourceFiles.AddRange(new[]
+        {
+            @"nfd_win.cpp",
+            @"include\nfd.h", @"include\nfd.hpp"
+        });
+        IsFileNameToLower = false;
+        IsTargetFileNameToLower = false;
+        AddTargets(new GameBenchTarget());
+    }
+
+    [Configure]
+    public void ConfigureAll(Configuration conf, Target target)
+    {
+        conf.ProjectFileName = "[project.Name]";
+        conf.ProjectPath = @"[project.SharpmakeCsPath]\nativefiledialog-extended\Intermediate\ProjectFiles";
+        conf.IntermediatePath = @"[project.SharpmakeCsPath]\nativefiledialog-extended\Intermediate\[target.Platform]_[conf.Name]";
+        conf.TargetPath = @"[project.SharpmakeCsPath]\nativefiledialog-extended\Binaries\[target.Platform]_[conf.Name]";
+        conf.Output = Configuration.OutputType.Lib;
+
+        conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\nativefiledialog-extended\src\include");
+
+        conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
+        conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
+        conf.Defines.Add("WIN32_LEAN_AND_MEAN");
+        conf.Defines.Add("NOMINMAX");
     }
 }

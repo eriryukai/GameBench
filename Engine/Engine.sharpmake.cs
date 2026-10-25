@@ -46,6 +46,12 @@ namespace GameBench
             {
                 conf.Defines.Add("GAMEBENCH_PLATFORM_WINDOWS");
                 conf.Options.Add(Options.Vc.Linker.SubSystem.Windows);
+
+                // FileSystem / nativefiledialog-extended platform APIs.
+                conf.LibraryFiles.Add("Advapi32.lib"); // Registry environment variables
+                conf.LibraryFiles.Add("Ole32.lib");    // COM (IFileDialog)
+                conf.LibraryFiles.Add("Shell32.lib");  // ShellExecute / SHGetKnownFolderPath
+                conf.LibraryFiles.Add("User32.lib");   // SendMessageTimeoutA
             }
 
             ConfigureGLFW(conf, target);
@@ -66,6 +72,8 @@ namespace GameBench
 
             conf.AddPrivateDependency<DirectX12>(target);
             conf.AddPrivateDependency<ImGui>(target);
+            conf.AddPrivateDependency<Choc>(target);
+            conf.AddPrivateDependency<NFDExtended>(target);
             conf.AddPrivateDependency<ShaderMakeTool>(target, DependencySetting.OnlyBuildOrder);
         }
 
