@@ -1,7 +1,7 @@
 // Copyright (c) CreationArt. All Rights Reserved.
 #include "stdafx.h"
 
-#ifdef GAMEBENCH_PLATFORM_WINDOWS
+#ifdef MORTARENGINE_PLATFORM_WINDOWS
 
 #include "Core/Runtime.h"
 
@@ -10,7 +10,7 @@
 #include <io.h>
 #include <fcntl.h>
 
-#if !defined(GAMEBENCH_SHIPPING)
+#if !defined(MORTARENGINE_SHIPPING)
 // The engine is linked as a WINDOWS subsystem app (entry point: WinMain), so it has
 // no console by default. Attach to the parent console when launched from a terminal,
 // otherwise allocate a fresh one, then rebind the standard streams so std::cout,
@@ -30,7 +30,7 @@ static void SetupConsole()
 	std::ios::sync_with_stdio();
 
 	SetConsoleOutputCP(CP_UTF8);
-	SetConsoleTitleW(L"GameBench");
+	SetConsoleTitleW(L"MortarEngine");
 }
 #endif
 
@@ -40,7 +40,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	(void)lpCmdLine;
 	(void)nCmdShow;
 
-#if !defined(GAMEBENCH_SHIPPING)
+#if !defined(MORTARENGINE_SHIPPING)
 	SetupConsole();
 #endif
 
@@ -66,4 +66,4 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	return Result;
 }
 
-#endif // GAMEBENCH_PLATFORM_WINDOWS
+#endif // MORTARENGINE_PLATFORM_WINDOWS

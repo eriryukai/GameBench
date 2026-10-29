@@ -9,10 +9,10 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using GameBench.Editor.Managed.Core;
-using GameBench.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.Core;
+using MortarEngine.Editor.Managed.Styling;
 
-namespace GameBench.Editor.Managed.UI.TitleBar;
+namespace MortarEngine.Editor.Managed.UI.TitleBar;
 
 public partial class TitleBar : UserControl
 {

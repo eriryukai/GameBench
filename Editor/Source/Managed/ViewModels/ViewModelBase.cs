@@ -2,7 +2,7 @@
 
 using ReactiveUI;
 
-namespace GameBench.Editor.Managed.ViewModels;
+namespace MortarEngine.Editor.Managed.ViewModels;
 
 public class ViewModelBase : ReactiveObject
 {

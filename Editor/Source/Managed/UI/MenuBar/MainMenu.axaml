@@ -1,7 +1,7 @@
 <!-- Copyright (c) CreationArt. All Rights Reserved. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="GameBench.Editor.Managed.UI.MenuBar.MainMenu">
+             x:Class="MortarEngine.Editor.Managed.UI.MenuBar.MainMenu">
     <Menu Background="Transparent" VerticalAlignment="Center">
         <MenuItem Header="_File">
             <MenuItem x:Name="ExitMenuItem" Header="Exit" />

@@ -2,9 +2,9 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:sys="using:System"
-             xmlns:vm="using:GameBench.Editor.Managed.UI.Notifications"
+             xmlns:vm="using:MortarEngine.Editor.Managed.UI.Notifications"
              x:DataType="vm:NotificationsViewModel"
-             x:Class="GameBench.Editor.Managed.UI.Notifications.NotificationsButton">
+             x:Class="MortarEngine.Editor.Managed.UI.Notifications.NotificationsButton">
     <Button Classes="toolbar"
             VerticalAlignment="Center"
             Cursor="Hand"

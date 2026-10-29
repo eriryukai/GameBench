@@ -3,10 +3,10 @@
 #nullable enable
 using System;
 using System.Collections.ObjectModel;
-using GameBench.Editor.Managed.ViewModels;
+using MortarEngine.Editor.Managed.ViewModels;
 using ReactiveUI;
 
-namespace GameBench.Editor.Managed.Core;
+namespace MortarEngine.Editor.Managed.Core;
 
 // Shared, observable state for the whole editor. Regions bind to this instead of
 // reaching into each other, mirroring how the engine hands subsystem state around

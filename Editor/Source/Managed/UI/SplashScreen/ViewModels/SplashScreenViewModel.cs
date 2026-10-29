@@ -4,11 +4,11 @@
 using System.Threading;
 using System.Windows.Input;
 using Avalonia.Media.Imaging;
-using GameBench.Editor.Managed.Styling;
-using GameBench.Editor.Managed.ViewModels;
+using MortarEngine.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.ViewModels;
 using ReactiveUI;
 
-namespace GameBench.Editor.Managed.UI.SplashScreen.ViewModels;
+namespace MortarEngine.Editor.Managed.UI.SplashScreen.ViewModels;
 
 public class SplashScreenViewModel : ViewModelBase
 {

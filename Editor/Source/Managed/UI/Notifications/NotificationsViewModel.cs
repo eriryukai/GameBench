@@ -5,12 +5,12 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Input;
 using Avalonia.Media;
-using GameBench.Editor.Managed.Core;
-using GameBench.Editor.Managed.Styling;
-using GameBench.Editor.Managed.ViewModels;
+using MortarEngine.Editor.Managed.Core;
+using MortarEngine.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.ViewModels;
 using ReactiveUI;
 
-namespace GameBench.Editor.Managed.UI.Notifications;
+namespace MortarEngine.Editor.Managed.UI.Notifications;
 
 // Renders the title-bar notifications bell: the unread count, the flyout log and the
 // clear action. Backed by EditorState.Notifications so any region can report status.

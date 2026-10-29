@@ -11,7 +11,7 @@ using Avalonia.Media;
 using Avalonia.Media.Imaging;
 using Avalonia.Platform;
 
-namespace GameBench.Editor.Managed.Styling;
+namespace MortarEngine.Editor.Managed.Styling;
 
 internal static class EditorTheme
 {

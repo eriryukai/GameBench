@@ -6,9 +6,9 @@ using Avalonia.Controls;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using GameBench.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.Styling;
 
-namespace GameBench.Editor.Managed.UI.TitleBar;
+namespace MortarEngine.Editor.Managed.UI.TitleBar;
 
 // The editor brand mark. Presentation-only, so it is a tiny reusable control rather than a
 // view model; it just loads the shipped logo and falls back to a tinted glyph if it is missing.

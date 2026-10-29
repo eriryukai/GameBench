@@ -5,10 +5,10 @@ using System;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media.Imaging;
-using GameBench.Editor.Managed.Styling;
-using GameBench.Editor.Managed.UI.Caption;
+using MortarEngine.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.UI.Caption;
 
-namespace GameBench.Editor.Managed.UI;
+namespace MortarEngine.Editor.Managed.UI;
 
 // The editor shell. It wires the window-level behaviour (chrome, closing, icon) and composes
 // the region views; everything the shell used to build inline now lives in its own region.

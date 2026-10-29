@@ -5,7 +5,7 @@ using Avalonia;
 using Avalonia.Controls.Shapes;
 using Avalonia.Media;
 
-namespace GameBench.Editor.Managed.Styling;
+namespace MortarEngine.Editor.Managed.Styling;
 
 internal static class EditorIcons
 {

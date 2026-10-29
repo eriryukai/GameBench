@@ -1,11 +1,11 @@
 using System;
 using Sharpmake;
 
-namespace GameBench
+namespace MortarEngine
 {
-    public class GameBenchTarget : Target
+    public class MortarEngineTarget : Target
     {
-        public GameBenchTarget()
+        public MortarEngineTarget()
             : base(Platform.win64, DevEnv.vs2026, Optimization.Debug | Optimization.Release | Optimization.Retail)
         {
         }
@@ -13,7 +13,7 @@ namespace GameBench
         public bool IsShipping => Optimization == Optimization.Retail;
         public override string Name => IsShipping ? "Shipping" : Optimization.ToString();
         public string OutputFolder => Name.ToLowerInvariant().Replace(' ', '_');
-        public GameBenchTarget NativeToolTarget => (GameBenchTarget)Clone();
-        public GameBenchTarget ManagedTarget => (GameBenchTarget)Clone(DotNetFramework.net10_0);
+        public MortarEngineTarget NativeToolTarget => (MortarEngineTarget)Clone();
+        public MortarEngineTarget ManagedTarget => (MortarEngineTarget)Clone(DotNetFramework.net10_0);
     }
 }

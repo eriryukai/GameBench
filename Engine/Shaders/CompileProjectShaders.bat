@@ -49,7 +49,7 @@ goto :check_tools
 
 :resolve_spirv
 if /i "%dxc%"=="vulkan" set "dxc="
-if not defined dxc if defined GAMEBENCH_DXC set "dxc=%GAMEBENCH_DXC%"
+if not defined dxc if defined MORTARENGINE_DXC set "dxc=%MORTARENGINE_DXC%"
 rem A quoted "%%VULKAN_SDK%%\Bin\dxc.exe" with VULKAN_SDK unset expands to the
 rem nonsense "\Bin\dxc.exe"; the existence check below discards it.
 if not defined dxc set "dxc=%VULKAN_SDK%\Bin\dxc.exe"
@@ -62,10 +62,10 @@ if not defined dxc (
     rem the runtime currently only loads DXIL, so skip instead of failing the build.
     echo WARNING: No SPIR-V capable DXC ^(Vulkan SDK^) found - skipping the SPIR-V pass.
     echo          DXIL shaders were still compiled and are what the DX12 runtime loads.
-    echo          Install the LunarG Vulkan SDK, or set VULKAN_SDK / GAMEBENCH_DXC to a
+    echo          Install the LunarG Vulkan SDK, or set VULKAN_SDK / MORTARENGINE_DXC to a
     echo          dxc.exe built with SPIR-V codegen, to re-enable Vulkan shaders.
-    if defined GAMEBENCH_REQUIRE_SPIRV (
-        echo ERROR: GAMEBENCH_REQUIRE_SPIRV is set, refusing to skip SPIR-V compilation.
+    if defined MORTARENGINE_REQUIRE_SPIRV (
+        echo ERROR: MORTARENGINE_REQUIRE_SPIRV is set, refusing to skip SPIR-V compilation.
         goto :failed
     )
     goto :done

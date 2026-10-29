@@ -1,13 +1,13 @@
 <!-- Copyright (c) CreationArt. All Rights Reserved. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:tb="using:GameBench.Editor.Managed.UI.TitleBar"
-             xmlns:mb="using:GameBench.Editor.Managed.UI.MenuBar"
-             xmlns:cap="using:GameBench.Editor.Managed.UI.Caption"
-             xmlns:notif="using:GameBench.Editor.Managed.UI.Notifications"
-             xmlns:vm="using:GameBench.Editor.Managed.UI.TitleBar"
+             xmlns:tb="using:MortarEngine.Editor.Managed.UI.TitleBar"
+             xmlns:mb="using:MortarEngine.Editor.Managed.UI.MenuBar"
+             xmlns:cap="using:MortarEngine.Editor.Managed.UI.Caption"
+             xmlns:notif="using:MortarEngine.Editor.Managed.UI.Notifications"
+             xmlns:vm="using:MortarEngine.Editor.Managed.UI.TitleBar"
              x:DataType="vm:TitleBarViewModel"
-             x:Class="GameBench.Editor.Managed.UI.TitleBar.TitleBar">
+             x:Class="MortarEngine.Editor.Managed.UI.TitleBar.TitleBar">
     <!-- Hazel's UI_DrawTitlebar: a 57px bar filled with the titlebar colour, overlaid by a
          380px-wide horizontal gradient from the running-state colour back to the titlebar. -->
     <Border Height="57"

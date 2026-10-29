@@ -11,6 +11,6 @@
 #include <io.h>
 #include <fcntl.h>
 
-#ifdef GAMEBENCH_PLATFORM_WINDOWS
+#ifdef MORTARENGINE_PLATFORM_WINDOWS
 #include <windows.h>
 #endif

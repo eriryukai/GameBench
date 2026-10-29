@@ -3,7 +3,7 @@
 #nullable enable
 using Avalonia.Controls;
 
-namespace GameBench.Editor.Managed.UI.Notifications;
+namespace MortarEngine.Editor.Managed.UI.Notifications;
 
 public partial class NotificationsButton : UserControl
 {

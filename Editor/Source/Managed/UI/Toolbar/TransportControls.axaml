@@ -1,9 +1,9 @@
 <!-- Copyright (c) CreationArt. All Rights Reserved. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:GameBench.Editor.Managed.UI.Toolbar"
+             xmlns:vm="using:MortarEngine.Editor.Managed.UI.Toolbar"
              x:DataType="vm:TransportViewModel"
-             x:Class="GameBench.Editor.Managed.UI.Toolbar.TransportControls">
+             x:Class="MortarEngine.Editor.Managed.UI.Toolbar.TransportControls">
     <Button Classes="toolbar"
             VerticalAlignment="Center"
             Cursor="Hand"

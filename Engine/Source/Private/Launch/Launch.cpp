@@ -3,8 +3,8 @@
 #include "stdafx.h"
 #include "Core/Application.h"
 
-#if !defined(GAMEBENCH_PLATFORM_WINDOWS)
-#error "No platform defined. Define GAMEBENCH_PLATFORM_WINDOWS to 1 in PlatformConfig.h"
+#if !defined(MORTARENGINE_PLATFORM_WINDOWS)
+#error "No platform defined. Define MORTARENGINE_PLATFORM_WINDOWS to 1 in PlatformConfig.h"
 #endif
 
 //@TODO: Figure out a model, similiar to unreal engine that even with a game project we still have one application. 
@@ -27,7 +27,7 @@ Application* CreateApplication(int argc, char** argv)
 	(void)argv;
 
 	ApplicationSpecification Specification;
-	Specification.Window.SetTitle("GameBench");
+	Specification.Window.SetTitle("MortarEngine");
 	Specification.Window.SetWidth(1280);
 	Specification.Window.SetHeight(720);
 	Specification.Window.SetStartMaximized(true);

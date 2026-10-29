@@ -1,9 +1,9 @@
 <!-- Copyright (c) CreationArt. All Rights Reserved. -->
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:vm="using:GameBench.Editor.Managed.UI.Caption"
+             xmlns:vm="using:MortarEngine.Editor.Managed.UI.Caption"
              x:DataType="vm:WindowCaptionViewModel"
-             x:Class="GameBench.Editor.Managed.UI.Caption.WindowCaption">
+             x:Class="MortarEngine.Editor.Managed.UI.Caption.WindowCaption">
     <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
         <Button Classes="caption"
                 Width="46"

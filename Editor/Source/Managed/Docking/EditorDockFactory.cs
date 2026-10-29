@@ -7,7 +7,7 @@ using Dock.Model.Controls;
 using Dock.Model.Core;
 using Dock.Model.Mvvm;
 
-namespace GameBench.Editor.Managed.Docking;
+namespace MortarEngine.Editor.Managed.Docking;
 
 public sealed class EditorDockFactory : Factory
 {

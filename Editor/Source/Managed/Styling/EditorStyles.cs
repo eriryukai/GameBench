@@ -12,7 +12,7 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using Dock.Avalonia.Controls;
 
-namespace GameBench.Editor.Managed.Styling;
+namespace MortarEngine.Editor.Managed.Styling;
 
 internal sealed class EditorStyles : Styles
 {

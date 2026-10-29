@@ -4,11 +4,11 @@
 using System;
 using System.Windows.Input;
 using Avalonia.Media;
-using GameBench.Editor.Managed.Styling;
-using GameBench.Editor.Managed.ViewModels;
+using MortarEngine.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.ViewModels;
 using ReactiveUI;
 
-namespace GameBench.Editor.Managed.UI.Caption;
+namespace MortarEngine.Editor.Managed.UI.Caption;
 
 // Drives the custom min / max / close buttons. Window actions are injected by the shell
 // (MainWindow), so this view model never has to know about the window itself.

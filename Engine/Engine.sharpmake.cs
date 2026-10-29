@@ -1,11 +1,11 @@
 using Sharpmake;
 
-namespace GameBench
+namespace MortarEngine
 {
     [Generate]
     public class Engine : Project
     {
-        public Engine() : base(typeof(GameBenchTarget))
+        public Engine() : base(typeof(MortarEngineTarget))
         {
             Name = "Engine";
             SourceRootPath = @"[project.SharpmakeCsPath]\Source";
@@ -13,11 +13,11 @@ namespace GameBench
             IsFileNameToLower = false;
             IsTargetFileNameToLower = false;
 
-            AddTargets(new GameBenchTarget());
+            AddTargets(new MortarEngineTarget());
         }
 
         [Configure]
-        public void ConfigureAll(Configuration conf, GameBenchTarget target)
+        public void ConfigureAll(Configuration conf, MortarEngineTarget target)
         {
             conf.ProjectFileName = "[project.Name]_[target.DevEnv]_[target.Platform]";
             conf.ProjectPath = @"[project.SharpmakeCsPath]\Intermediate\ProjectFiles";
@@ -44,7 +44,7 @@ namespace GameBench
         {
             if (target.Platform == Platform.win64)
             {
-                conf.Defines.Add("GAMEBENCH_PLATFORM_WINDOWS");
+                conf.Defines.Add("MORTARENGINE_PLATFORM_WINDOWS");
                 conf.Options.Add(Options.Vc.Linker.SubSystem.Windows);
 
                 // FileSystem / nativefiledialog-extended platform APIs.
@@ -98,7 +98,7 @@ namespace GameBench
             conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" auto DXIL");
         }
 
-        void ConfigureApplication(Configuration conf, GameBenchTarget target)
+        void ConfigureApplication(Configuration conf, MortarEngineTarget target)
         {
             conf.Output = Configuration.OutputType.Exe;
             conf.Defines.Add("WITH_EDITOR=0");
@@ -107,7 +107,7 @@ namespace GameBench
             conf.SourceFilesBuildExcludeRegex.Add(@"[\\/]Editor[\\/]");
             if (target.IsShipping)
             {
-                conf.Defines.Add("GAMEBENCH_SHIPPING=1");
+                conf.Defines.Add("MORTARENGINE_SHIPPING=1");
             }
             conf.VcxprojUserFile = new Configuration.VcxprojUserFileSettings
             {

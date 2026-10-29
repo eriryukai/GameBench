@@ -10,7 +10,7 @@
 #include <cstdlib>
 #include <filesystem>
 
-#ifdef GAMEBENCH_PLATFORM_WINDOWS
+#ifdef MORTARENGINE_PLATFORM_WINDOWS
 
 namespace
 {
@@ -48,7 +48,7 @@ std::filesystem::path FileSystem::GetPersistentStoragePath()
 	s_PersistentStoragePath = roamingFilePath;
 	CoTaskMemFree(roamingFilePath);
 
-	s_PersistentStoragePath /= "GameBench";
+	s_PersistentStoragePath /= "MortarEngine";
 
 	if (!std::filesystem::exists(s_PersistentStoragePath))
 		std::filesystem::create_directories(s_PersistentStoragePath);
@@ -104,4 +104,4 @@ std::string FileSystem::GetEnvironmentVariable(const std::string& key)
 	return {};
 }
 
-#endif // GAMEBENCH_PLATFORM_WINDOWS
+#endif // MORTARENGINE_PLATFORM_WINDOWS

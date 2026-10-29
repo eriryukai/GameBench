@@ -3,7 +3,7 @@
 #nullable enable
 using Avalonia.Controls;
 
-namespace GameBench.Editor.Managed.UI.SplashScreen.Views;
+namespace MortarEngine.Editor.Managed.UI.SplashScreen.Views;
 
 public partial class SplashScreen : Window
 {

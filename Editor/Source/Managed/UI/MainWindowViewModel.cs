@@ -4,14 +4,14 @@
 using System.Threading.Tasks;
 using Dock.Model.Controls;
 using Dock.Model.Core;
-using GameBench.Editor.Managed.Core;
-using GameBench.Editor.Managed.Docking;
-using GameBench.Editor.Managed.UI.Caption;
-using GameBench.Editor.Managed.UI.TitleBar;
-using GameBench.Editor.Managed.UI.Toolbar;
-using GameBench.Editor.Managed.ViewModels;
+using MortarEngine.Editor.Managed.Core;
+using MortarEngine.Editor.Managed.Docking;
+using MortarEngine.Editor.Managed.UI.Caption;
+using MortarEngine.Editor.Managed.UI.TitleBar;
+using MortarEngine.Editor.Managed.UI.Toolbar;
+using MortarEngine.Editor.Managed.ViewModels;
 
-namespace GameBench.Editor.Managed.UI;
+namespace MortarEngine.Editor.Managed.UI;
 
 // Root view model for the editor shell. It composes the region view models and owns the
 // dock layout, so MainWindow itself stays a thin composition surface.
@@ -26,7 +26,7 @@ public sealed class MainWindowViewModel : ViewModelBase
 
     public EditorState State { get; } = new();
 
-    public string ProjectName => "GameBench";
+    public string ProjectName => "MortarEngine";
 
     public string Title => $"MortarEngine Editor - {ProjectName}";
 

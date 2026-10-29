@@ -2,26 +2,26 @@
 
 using Sharpmake;
 
-[module: Sharpmake.Include(@"GameBenchTarget.sharpmake.cs")]
+[module: Sharpmake.Include(@"MortarEngineTarget.sharpmake.cs")]
 [module: Sharpmake.Include(@"Engine\Engine.sharpmake.cs")]
 [module: Sharpmake.Include(@"Editor\Editor.sharpmake.cs")]
 [module: Sharpmake.Include(@"Engine\ThirdParty\ThirdParty.sharpmake.cs")]
 
-namespace GameBench
+namespace MortarEngine
 {
     [Generate]
-    public class GameBench : Solution
+    public class MortarEngine : Solution
     {
-        public GameBench() : base(typeof(GameBenchTarget))
+        public MortarEngine() : base(typeof(MortarEngineTarget))
         {
-            Name = "GameBench";
+            Name = "MortarEngine";
             IsFileNameToLower = false;
 
-            AddTargets(new GameBenchTarget());
+            AddTargets(new MortarEngineTarget());
         }
 
         [Configure]
-        public void ConfigureAll(Configuration conf, GameBenchTarget target)
+        public void ConfigureAll(Configuration conf, MortarEngineTarget target)
         {
             conf.SolutionFileName = "[solution.Name]_[target.DevEnv]_[target.Platform]";
             conf.SolutionPath = @"[solution.SharpmakeCsPath]";
@@ -48,7 +48,7 @@ namespace GameBench
                 KitsRootEnum.KitsRoot10,
                 Options.Vc.General.WindowsTargetPlatformVersion.Latest);
 
-            arguments.Generate<GameBench>();
+            arguments.Generate<MortarEngine>();
         }
     }
 }

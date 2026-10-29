@@ -9,11 +9,11 @@
 
 #include "Utilities/StringUtils.h"
 
-#ifdef GAMEBENCH_PLATFORM_LINUX
+#ifdef MORTARENGINE_PLATFORM_LINUX
 #include <libgen.h>
 #endif
 
-#ifdef GAMEBENCH_PLATFORM_WINDOWS
+#ifdef MORTARENGINE_PLATFORM_WINDOWS
 #include <shellapi.h>
 #endif
 
@@ -129,9 +129,9 @@ bool FileSystem::ShowFileInExplorer(const std::filesystem::path& path)
 	if (!Exists(absolutePath))
 		return false;
 
-#ifdef GAMEBENCH_PLATFORM_WINDOWS
+#ifdef MORTARENGINE_PLATFORM_WINDOWS
 	std::string cmd = std::format("explorer.exe /select,\"{0}\"", absolutePath.string());
-#elif defined(GAMEBENCH_PLATFORM_LINUX)
+#elif defined(MORTARENGINE_PLATFORM_LINUX)
 	std::string cmd = std::format("xdg-open \"{0}\"", dirname(absolutePath.string().data()));
 #else
 	return false;
@@ -142,14 +142,14 @@ bool FileSystem::ShowFileInExplorer(const std::filesystem::path& path)
 
 bool FileSystem::OpenDirectoryInExplorer(const std::filesystem::path& path)
 {
-#ifdef GAMEBENCH_PLATFORM_WINDOWS
+#ifdef MORTARENGINE_PLATFORM_WINDOWS
 	auto absolutePath = std::filesystem::canonical(path);
 	if (!Exists(absolutePath))
 		return false;
 
 	ShellExecuteW(NULL, L"explore", absolutePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	return true;
-#elif defined(GAMEBENCH_PLATFORM_LINUX)
+#elif defined(MORTARENGINE_PLATFORM_LINUX)
 	return ShowFileInExplorer(path);
 #else
 	return false;
@@ -162,10 +162,10 @@ bool FileSystem::OpenExternally(const std::filesystem::path& path)
 	if (!Exists(absolutePath))
 		return false;
 
-#ifdef GAMEBENCH_PLATFORM_WINDOWS
+#ifdef MORTARENGINE_PLATFORM_WINDOWS
 	ShellExecuteW(NULL, L"open", absolutePath.c_str(), NULL, NULL, SW_SHOWNORMAL);
 	return true;
-#elif defined(GAMEBENCH_PLATFORM_LINUX)
+#elif defined(MORTARENGINE_PLATFORM_LINUX)
 	std::string cmd = std::format("xdg-open \"{0}\"", absolutePath.string().data());
 	std::system(cmd.c_str());
 	return true;

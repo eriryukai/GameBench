@@ -5,12 +5,12 @@ using System;
 using System.Windows.Input;
 using Avalonia.Media;
 using Avalonia.Media.Imaging;
-using GameBench.Editor.Managed.Core;
-using GameBench.Editor.Managed.Styling;
-using GameBench.Editor.Managed.ViewModels;
+using MortarEngine.Editor.Managed.Core;
+using MortarEngine.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.ViewModels;
 using ReactiveUI;
 
-namespace GameBench.Editor.Managed.UI.Toolbar;
+namespace MortarEngine.Editor.Managed.UI.Toolbar;
 
 // The play / stop transport. It flips EditorState.IsPlaying and reflects the result back
 // as the button label, tooltip and icon, so the title bar can react to the same state.

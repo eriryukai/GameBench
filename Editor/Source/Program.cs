@@ -4,9 +4,9 @@
 using System;
 using Avalonia;
 using ReactiveUI.Avalonia;
-using GameBench.Editor.Managed.Core;
+using MortarEngine.Editor.Managed.Core;
 
-namespace GameBench.Editor;
+namespace MortarEngine.Editor;
 
 // The managed entry point. Unlike every other file it deliberately sits outside
 // Managed/ and Native/: it is the counterpart of LaunchWindows.cpp and only knows

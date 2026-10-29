@@ -1,13 +1,13 @@
 using Sharpmake;
 using System;
 using System.IO;
-using GameBench;
+using MortarEngine;
 
 [Export]
 public class DirectX12 : Project
 {
     public DirectX12()
-        : base(typeof(GameBenchTarget))
+        : base(typeof(MortarEngineTarget))
     {
         Name = "DirectX12";
 
@@ -15,7 +15,7 @@ public class DirectX12 : Project
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
 
-        AddTargets(new GameBenchTarget());
+        AddTargets(new MortarEngineTarget());
     }
 
     [Configure]
@@ -34,7 +34,7 @@ public class DirectX12 : Project
 public class Choc : Project
 {
     public Choc()
-        : base(typeof(GameBenchTarget))
+        : base(typeof(MortarEngineTarget))
     {
         Name = "Choc";
 
@@ -42,7 +42,7 @@ public class Choc : Project
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
 
-        AddTargets(new GameBenchTarget());
+        AddTargets(new MortarEngineTarget());
     }
 
     [Configure]
@@ -56,7 +56,7 @@ public class Choc : Project
 public class ShaderMakeTool : Project
 {
     public ShaderMakeTool()
-        : base(typeof(GameBenchTarget))
+        : base(typeof(MortarEngineTarget))
     {
         Name = "ShaderMake";
         SourceRootPath = @"[project.SharpmakeCsPath]\ShaderMake\ShaderMake";
@@ -67,7 +67,7 @@ public class ShaderMakeTool : Project
         });
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
-        AddTargets(new GameBenchTarget());
+        AddTargets(new MortarEngineTarget());
     }
 
     [Configure]
@@ -90,7 +90,7 @@ public class ShaderMakeTool : Project
 public class ImGui : Project
 {
     public ImGui()
-        : base(typeof(GameBenchTarget))
+        : base(typeof(MortarEngineTarget))
     {
         Name = "ImGui";
         SourceRootPath = @"[project.SharpmakeCsPath]\imgui";
@@ -109,7 +109,7 @@ public class ImGui : Project
         });
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
-        AddTargets(new GameBenchTarget());
+        AddTargets(new MortarEngineTarget());
     }
 
     [Configure]
@@ -139,7 +139,7 @@ public class ImGui : Project
 public class NFDExtended : Project
 {
     public NFDExtended()
-        : base(typeof(GameBenchTarget))
+        : base(typeof(MortarEngineTarget))
     {
         Name = "NFD-Extended";
         SourceRootPath = @"[project.SharpmakeCsPath]\nativefiledialog-extended\src";
@@ -151,7 +151,7 @@ public class NFDExtended : Project
         });
         IsFileNameToLower = false;
         IsTargetFileNameToLower = false;
-        AddTargets(new GameBenchTarget());
+        AddTargets(new MortarEngineTarget());
     }
 
     [Configure]

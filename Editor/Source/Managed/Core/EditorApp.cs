@@ -12,12 +12,12 @@ using Avalonia.Styling;
 using Avalonia.Themes.Fluent;
 using Dock.Avalonia.Themes;
 using Dock.Avalonia.Themes.Fluent;
-using GameBench.Editor.Managed.Styling;
-using GameBench.Editor.Managed.UI;
-using GameBench.Editor.Managed.UI.SplashScreen.ViewModels;
-using SplashScreenView = GameBench.Editor.Managed.UI.SplashScreen.Views.SplashScreen;
+using MortarEngine.Editor.Managed.Styling;
+using MortarEngine.Editor.Managed.UI;
+using MortarEngine.Editor.Managed.UI.SplashScreen.ViewModels;
+using SplashScreenView = MortarEngine.Editor.Managed.UI.SplashScreen.Views.SplashScreen;
 
-namespace GameBench.Editor.Managed.Core;
+namespace MortarEngine.Editor.Managed.Core;
 
 // The editor's composition root, the managed counterpart of Interface::Application:
 // it owns the lifetime, wires the styling, and hands over to the editor window once

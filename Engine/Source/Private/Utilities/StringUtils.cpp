@@ -96,7 +96,7 @@ namespace Utilities {
 
 		int32_t CompareCase(std::string_view a, std::string_view b)
 		{
-		#ifdef GAMEBENCH_PLATFORM_WINDOWS
+		#ifdef MORTARENGINE_PLATFORM_WINDOWS
 			return _stricmp(a.data(), b.data());
 		#else
 			return strcasecmp(a.data(), b.data());

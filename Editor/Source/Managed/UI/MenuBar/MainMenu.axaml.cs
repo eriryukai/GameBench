@@ -3,7 +3,7 @@
 #nullable enable
 using Avalonia.Controls;
 
-namespace GameBench.Editor.Managed.UI.MenuBar;
+namespace MortarEngine.Editor.Managed.UI.MenuBar;
 
 public partial class MainMenu : UserControl
 {

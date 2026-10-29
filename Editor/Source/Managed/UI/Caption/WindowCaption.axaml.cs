@@ -3,7 +3,7 @@
 #nullable enable
 using Avalonia.Controls;
 
-namespace GameBench.Editor.Managed.UI.Caption;
+namespace MortarEngine.Editor.Managed.UI.Caption;
 
 public partial class WindowCaption : UserControl
 {

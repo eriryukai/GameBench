@@ -1,11 +1,11 @@
 using Sharpmake;
 
-namespace GameBench
+namespace MortarEngine
 {
     [Generate]
     public class Editor : CSharpProject
     {
-        public Editor() : base(typeof(GameBenchTarget))
+        public Editor() : base(typeof(MortarEngineTarget))
         {
             Name = "Editor";
             RootPath = @"[project.SharpmakeCsPath]";
@@ -22,11 +22,11 @@ namespace GameBench
             CustomProperties["Platforms"] = "x64";
             CustomProperties["Configurations"] = "Debug;Release;Shipping";
             CustomProperties["PlatformTarget"] = "x64";
-            AddTargets(new GameBenchTarget().ManagedTarget);
+            AddTargets(new MortarEngineTarget().ManagedTarget);
         }
 
         [Configure]
-        public void ConfigureAll(Configuration conf, GameBenchTarget target)
+        public void ConfigureAll(Configuration conf, MortarEngineTarget target)
         {
             conf.ProjectFileName = "[project.Name]";
             conf.ProjectPath = @"[project.SharpmakeCsPath]\Intermediate\ProjectFiles";
@@ -36,7 +36,7 @@ namespace GameBench
             conf.Output = target.IsShipping? Configuration.OutputType.DotNetWindowsApp : Configuration.OutputType.DotNetConsoleApp;
             if (target.IsShipping)
             {
-                conf.Defines.Add("GAMEBENCH_SHIPPING");
+                conf.Defines.Add("MORTARENGINE_SHIPPING");
             }
 
             //@TODO: Currently, disabling engine project as editor right now purely visual. Need to solve:
