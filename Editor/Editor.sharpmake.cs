@@ -28,6 +28,7 @@ namespace MortarEngine
         [Configure]
         public void ConfigureAll(Configuration conf, MortarEngineTarget target)
         {
+            conf.SolutionFolder = "Engine";
             conf.ProjectFileName = "[project.Name]";
             conf.ProjectPath = @"[project.SharpmakeCsPath]\Intermediate\ProjectFiles";
 

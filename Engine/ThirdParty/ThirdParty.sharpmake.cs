@@ -21,6 +21,7 @@ public class DirectX12 : Project
     [Configure]
     public void ConfigureAll(Configuration conf, Target target)
     {
+        conf.SolutionFolder = "ThirdParty";
         conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\..\..\packages\Microsoft.Direct3D.D3D12.1.619.5\build\native\include");
 
         conf.LibraryFiles.Add("d3d12.lib");
@@ -48,6 +49,7 @@ public class Choc : Project
     [Configure]
     public void ConfigureAll(Configuration conf, Target target)
     {
+        conf.SolutionFolder = "ThirdParty";
         conf.IncludePaths.Add(@"[project.SharpmakeCsPath]");
     }
 }
@@ -73,6 +75,7 @@ public class ShaderMakeTool : Project
     [Configure]
     public void ConfigureAll(Configuration conf, Target target)
     {
+        conf.SolutionFolder = "ThirdParty";
         conf.ProjectFileName = "[project.Name]";
         conf.ProjectPath = @"[project.SharpmakeCsPath]\ShaderMake\Intermediate\ProjectFiles";
         conf.IntermediatePath = @"[project.SharpmakeCsPath]\ShaderMake\Intermediate\[target.Platform]_[conf.Name]";
@@ -115,6 +118,7 @@ public class ImGui : Project
     [Configure]
     public void ConfigureAll(Configuration conf, Target target)
     {
+        conf.SolutionFolder = "ThirdParty";
         conf.ProjectFileName = "[project.Name]";
         conf.ProjectPath = @"[project.SharpmakeCsPath]\imgui\Intermediate\ProjectFiles";
         conf.IntermediatePath = @"[project.SharpmakeCsPath]\imgui\Intermediate\[target.Platform]_[conf.Name]";
@@ -157,6 +161,7 @@ public class NFDExtended : Project
     [Configure]
     public void ConfigureAll(Configuration conf, Target target)
     {
+        conf.SolutionFolder = "ThirdParty";
         conf.ProjectFileName = "[project.Name]";
         conf.ProjectPath = @"[project.SharpmakeCsPath]\nativefiledialog-extended\Intermediate\ProjectFiles";
         conf.IntermediatePath = @"[project.SharpmakeCsPath]\nativefiledialog-extended\Intermediate\[target.Platform]_[conf.Name]";
