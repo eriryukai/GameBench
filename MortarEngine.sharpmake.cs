@@ -5,6 +5,7 @@ using Sharpmake;
 [module: Sharpmake.Include(@"MortarEngineTarget.sharpmake.cs")]
 [module: Sharpmake.Include(@"Engine\Engine.sharpmake.cs")]
 [module: Sharpmake.Include(@"Editor\Editor.sharpmake.cs")]
+[module: Sharpmake.Include(@"EOC\EOC.sharpmake.cs")]
 [module: Sharpmake.Include(@"Engine\ThirdParty\ThirdParty.sharpmake.cs")]
 
 namespace MortarEngine
@@ -23,7 +24,7 @@ namespace MortarEngine
         [Configure]
         public void ConfigureAll(Configuration conf, MortarEngineTarget target)
         {
-            conf.SolutionFileName = "[solution.Name]_[target.DevEnv]_[target.Platform]";
+            conf.SolutionFileName = "[solution.Name]";
             conf.SolutionPath = @"[solution.SharpmakeCsPath]";
 
 
@@ -35,6 +36,7 @@ namespace MortarEngine
             //       EditorEngine or GameEngine
             conf.AddProject<Editor>(target.ManagedTarget);
             conf.AddProject<Engine>(target);
+            conf.AddProject<EOC>(target);
         }
     }
 
