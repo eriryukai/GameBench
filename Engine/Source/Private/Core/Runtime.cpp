@@ -2,7 +2,7 @@
 
 #include "stdafx.h"
 #include "Runtime.h"
-#include "Application.h"
+#include "Core/Application.h"
 
 int RunEngine(int argc, char** argv, void* PlatformData)
 {

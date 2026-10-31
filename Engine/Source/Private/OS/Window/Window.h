@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "WindowTypes.h"
+#include "OS/Window/WindowTypes.h"
 
 class Window
 {

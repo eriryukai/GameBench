@@ -1,7 +1,7 @@
 // Copyright (c) CreationArt. All Rights Reserved.
 
 #include "stdafx.h"
-#include "LayerStack.h"
+#include "Core/LayerStack.h"
 
 #include <algorithm>
 

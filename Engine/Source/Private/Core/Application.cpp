@@ -1,7 +1,7 @@
 // Copyright (c) CreationArt. All Rights Reserved.
 
 #include "stdafx.h"
-#include "Application.h"
+#include "Core/Application.h"
 #include "OS/Window/Window.h"
 #include "Renderer/Renderer.h"
 #include "Renderer/RendererFactory.h"

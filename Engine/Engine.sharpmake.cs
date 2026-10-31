@@ -29,16 +29,18 @@ namespace MortarEngine
             conf.PrecompHeader = "stdafx.h";
             conf.PrecompSource = "stdafx.cpp";
 
+            // Public framework headers are exported to game modules such as EOC.
             conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\Source\Public");
-            conf.IncludePaths.Add(@"[project.SharpmakeCsPath]\Source\Private");
+
+            // Runtime internals remain private to the Engine library.
+            conf.IncludePrivatePaths.Add(@"[project.SharpmakeCsPath]\Source\Private");
 
             conf.Options.Add(Options.Vc.General.PlatformToolset.v145);
             conf.Options.Add(Options.Vc.Compiler.CppLanguageStandard.Latest);
 
             InitializePlatform(conf, target);
             InitializeDependencies(conf, target.NativeToolTarget);
-            BuildShaderPipeline(conf);
-            ConfigureApplication(conf, target);
+            ConfigureRuntimeLibrary(conf, target);
         }
 
         void InitializePlatform(Configuration conf, Target target)
@@ -71,37 +73,19 @@ namespace MortarEngine
         {
             conf.ReferencesByNuGetPackage.Add("Microsoft.Direct3D.D3D12", "1.619.5");
 
-            conf.AddPrivateDependency<DirectX12>(target);
-            conf.AddPrivateDependency<ImGui>(target);
-            conf.AddPrivateDependency<Choc>(target);
-            conf.AddPrivateDependency<NFDExtended>(target);
-            conf.AddPrivateDependency<ShaderMakeTool>(target, DependencySetting.OnlyBuildOrder);
+            // Engine is a static runtime library. Its link dependencies are public
+            // so the final game executable inherits the complete link line.
+            conf.AddPublicDependency<DirectX12>(target);
+            conf.AddPublicDependency<ImGui>(target);
+            conf.AddPublicDependency<Choc>(target);
+            conf.AddPublicDependency<NFDExtended>(target);
         }
 
-        void BuildShaderPipeline(Configuration conf)
+        void ConfigureRuntimeLibrary(Configuration conf, MortarEngineTarget target)
         {
-            /* Compile the HLSL under Engine\Shaders before every build so the runtime
-            * shader libraries can load the compiled blobs from next to the executable:
-            *   Vulkan : "<TargetDir>\Shaders\SPIRV\<Name>_<Entry>.spirv"
-            *   DX12   : "<TargetDir>\Shaders\DXIL\<Name>_<Entry>.dxil"
-            */
-            conf.EventPreBuildDescription = "Compiling shaders with ShaderMake (SPIR-V + DXIL)";
-            /* The dxc argument selects the compiler; the .bat resolves it because each
-            * backend needs a different DXC build:
-            *   SPIRV -> "vulkan": a DXC with SPIR-V codegen (LunarG Vulkan SDK). If none
-            *            is installed the pass is skipped with a warning, since only the
-            *            DX12 backend loads DXIL blobs today.
-            *   DXIL  -> "auto": the Windows SDK DXC, which ships the adjacent dxil.dll
-            *            needed to sign DXIL. Never pass "$(VULKAN_SDK)\Bin\dxc.exe" here:
-            *            when VULKAN_SDK is unset MSBuild expands it to "\Bin\dxc.exe".
-            */
-            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" vulkan SPIRV");
-            conf.EventPreBuild.Add(@"call ""$(SolutionDir)Engine\Shaders\CompileProjectShaders.bat"" nopause ""$(TargetDir)Shaders"" ""[target.Name]"" ""$(SolutionDir)Engine\ThirdParty\ShaderMake\Binaries\win64_[target.Name]\ShaderMake.exe"" auto DXIL");
-        }
-
-        void ConfigureApplication(Configuration conf, MortarEngineTarget target)
-        {
-            conf.Output = Configuration.OutputType.Exe;
+            // Engine owns WinMain, the runtime loop and engine services. A game
+            // target supplies CreateApplication and links this library.
+            conf.Output = Configuration.OutputType.Lib;
             conf.Defines.Add("WITH_EDITOR=0");
             conf.Defines.Add("NOMINMAX", "WIN32_LEAN_AND_MEAN");
             conf.Options.Add(Options.Vc.Compiler.Exceptions.Enable);
@@ -109,12 +93,8 @@ namespace MortarEngine
             if (target.IsShipping)
             {
                 conf.Defines.Add("MORTARENGINE_SHIPPING=1");
+                conf.ExportDefines.Add("MORTARENGINE_SHIPPING=1");
             }
-            conf.VcxprojUserFile = new Configuration.VcxprojUserFileSettings
-            {
-                LocalDebuggerCommand = "$(TargetPath)",
-                LocalDebuggerWorkingDirectory = "$(TargetDir)"
-            };
         }
     }
 }
