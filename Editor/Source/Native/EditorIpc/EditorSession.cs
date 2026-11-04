@@ -80,7 +80,7 @@ internal sealed class EditorSession : IAsyncDisposable
             PipeDirection.InOut,
             1,
             PipeTransmissionMode.Byte,
-            PipeOptions.CurrentUserOnly,
+            PipeOptions.Asynchronous | PipeOptions.CurrentUserOnly,
             65536,
             65536);
 
@@ -186,6 +186,11 @@ internal sealed class EditorSession : IAsyncDisposable
         };
 
         return SendAsync(EditorProtocol.MessageType.FrameAck, payload, frameId, _cts.Token);
+    }
+
+    public Task SendInputAsync(InputPayload payload)
+    {
+        return SendAsync(EditorProtocol.MessageType.Input, payload, 0, _cts.Token);
     }
 
     public async ValueTask DisposeAsync()

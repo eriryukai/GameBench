@@ -2,10 +2,13 @@
 
 #pragma once
 
+#include "Renderer/Viewport/ViewportInput.h"
+
 #include <d3d12.h>
 
 #include <cstdint>
 #include <memory>
+#include <vector>
 
 class Window;
 class RendererFactory;
@@ -33,6 +36,7 @@ public:
 	void WaitForGpu();
 
 	void RenderImGui();
+	void ApplyViewportInput(const std::vector<ViewportInputEvent>& Events);
 
 	RendererFactory* GetFactory() const { return m_RendererFactory.get(); }
 	ImGuiRenderer* GetImGuiRenderer() const { return m_ImGuiRenderer.get(); }

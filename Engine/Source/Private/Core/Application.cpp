@@ -200,6 +200,9 @@ void Application::Tick()
 		// @TODO: DrawCalls from game simulation to renderer.
 		if (GetSpecification().bEnabledImGui)
 		{
+			std::vector<ViewportInputEvent> InputEvents;
+			m_EditorBridge->ConsumeInput(InputEvents);
+			m_Renderer->ApplyViewportInput(InputEvents);
 			m_Renderer->RenderImGui();
 		}
 		m_Renderer->EndRenderToTexture();

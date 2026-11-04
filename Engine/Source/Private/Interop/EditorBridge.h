@@ -47,6 +47,10 @@ public:
 	void PublishFrame(uint32_t SlotIndex);
 	ViewportFrameRing* GetFrameRing() { return FrameRing.get(); }
 
+	// Called on the render thread before ImGui::NewFrame. The reader thread only
+	// appends events here; it never touches ImGui state directly.
+	void ConsumeInput(std::vector<ViewportInputEvent>& OutEvents);
+
 private:
 	struct OutboundMessage
 	{
@@ -75,6 +79,9 @@ private:
 	std::condition_variable QueueCondition;
 	std::deque<OutboundMessage> Outbound;
 	std::mutex WriteMutex;
+
+	std::mutex InputMutex;
+	std::vector<ViewportInputEvent> PendingInput;
 
 	std::atomic<bool> bStop = false;
 	std::atomic<bool> bConnected = false;

@@ -190,6 +190,11 @@ void EditorBridge::Shutdown()
 		Outbound.clear();
 	}
 
+	{
+		std::lock_guard<std::mutex> Lock(InputMutex);
+		PendingInput.clear();
+	}
+
 	if (FrameRing)
 	{
 		FrameRing->Shutdown();
@@ -217,6 +222,13 @@ uint32_t EditorBridge::GetViewportHeight() const
 int EditorBridge::AcquireWritableSlot()
 {
 	return FrameRing ? FrameRing->AcquireWritableSlot() : -1;
+}
+
+void EditorBridge::ConsumeInput(std::vector<ViewportInputEvent>& OutEvents)
+{
+	std::lock_guard<std::mutex> Lock(InputMutex);
+	OutEvents.insert(OutEvents.end(), PendingInput.begin(), PendingInput.end());
+	PendingInput.clear();
 }
 
 void EditorBridge::PublishFrame(uint32_t SlotIndex)
@@ -439,8 +451,23 @@ void EditorBridge::HandleMessage(const EditorProtocol::MessageHeader& Header, co
 		// texture while the window size changes.
 		break;
 	case EditorProtocol::MessageType::Input:
-		// Display-only native ImGui for now; input forwarding comes later.
+	{
+		if (Payload.size() < sizeof(EditorProtocol::Input))
+		{
+			return;
+		}
+
+		EditorProtocol::Input Event = {};
+		std::memcpy(&Event, Payload.data(), sizeof(Event));
+
+		std::lock_guard<std::mutex> Lock(InputMutex);
+		if (PendingInput.size() >= 1024)
+		{
+			PendingInput.erase(PendingInput.begin(), PendingInput.begin() + 256);
+		}
+		PendingInput.push_back(Event);
 		break;
+	}
 	default:
 		break;
 	}

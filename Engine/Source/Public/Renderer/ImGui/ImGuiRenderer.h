@@ -3,11 +3,13 @@
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_dx12.h"
+#include "Renderer/Viewport/ViewportInput.h"
 
 #include <d3d12.h>
 #include <wrl/client.h>
 
 #include <cstdint>
+#include <mutex>
 #include <vector>
 
 struct ImGuiSpecification
@@ -40,6 +42,7 @@ public:
 	void BeginFrame();
 	virtual void Render();
 	void EndFrame(ID3D12GraphicsCommandList* CommandList);
+	void SubmitInput(const std::vector<ViewportInputEvent>& Events);
 
 	const ImGuiSpecification& GetSpecification() const { return Specification; }
 	bool IsInitialized() const { return bInitialized; }
@@ -49,6 +52,7 @@ protected:
 
 	void SetupStyles();
 	bool InitializeBackend();
+	void ApplyPendingInput();
 
 	bool CreateSrvHeap();
 	void DestroySrvHeap();
@@ -63,6 +67,9 @@ protected:
 	ImGuiSpecification Specification;
 	bool bInitialized = false;
 	bool bGlfwInitialized = false;
+
+	std::mutex InputMutex;
+	std::vector<ViewportInputEvent> PendingInput;
 
 	static const UINT SrvHeapSize = 64;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_ImGuiSRVHeap;

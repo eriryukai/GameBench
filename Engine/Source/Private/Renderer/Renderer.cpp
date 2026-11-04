@@ -144,6 +144,14 @@ void Renderer::RenderImGui()
 	m_ImGuiRenderer->EndFrame(m_RendererFactory->GetCommandList());
 }
 
+void Renderer::ApplyViewportInput(const std::vector<ViewportInputEvent>& Events)
+{
+	if (m_ImGuiRenderer && m_ImGuiRenderer->IsInitialized())
+	{
+		m_ImGuiRenderer->SubmitInput(Events);
+	}
+}
+
 bool Renderer::InitializeRHI(const LUID* AdapterLuid)
 {
 	m_RendererFactory->Initialize(AdapterLuid);

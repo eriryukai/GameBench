@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Renderer/Viewport/ViewportInput.h"
+
 #include <cstdint>
 
 // Wire protocol shared by the native engine and the managed editor.
@@ -73,16 +75,7 @@ namespace EditorProtocol
 		uint32_t Height = 0;
 	};
 
-	struct Input
-	{
-		uint32_t Kind = 0;
-		float X = 0.0f;
-		float Y = 0.0f;
-		uint32_t Buttons = 0;
-		float Wheel = 0.0f;
-		uint32_t Key = 0;
-		uint32_t Modifiers = 0;
-	};
+	using Input = ::ViewportInputEvent;
 
 	struct Shutdown
 	{
