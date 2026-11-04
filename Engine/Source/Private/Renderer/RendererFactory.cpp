@@ -19,15 +19,18 @@ RendererFactory::~RendererFactory()
 	UnInitialize();
 }
 
-void RendererFactory::Initialize()
+void RendererFactory::Initialize(const LUID* adapterLuid)
 {
-	CreateDevice();
+	CreateDevice(adapterLuid);
 	CreateCommandQueue();
-	CreateSwapChain();
-	CreateRenderTargetViews();
+	if (m_Window)
+	{
+		CreateSwapChain();
+		CreateRenderTargetViews();
+	}
 	CreateCommandObjects();
 	CreateSyncObjects();
-}
+	}
 
 void RendererFactory::UnInitialize()
 {
@@ -58,6 +61,8 @@ void RendererFactory::UnInitialize()
 	m_Device.Reset();
 	m_Factory.Reset();
 	m_FrameIndex = 0;
+	m_OffscreenFrameIndex = 0;
+	m_OffscreenTarget = nullptr;
 	m_NextFenceValue = 1;
 	m_Width = m_Height = 0;
 
@@ -121,10 +126,15 @@ void RendererFactory::CreateDevice(const LUID* adapterLuid)
 	{
 		return;
 	}
-}
+	}
 
 void RendererFactory::CreateCommandQueue()
 {
+	if (!m_Device)
+	{
+		return;
+	}
+
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -183,6 +193,11 @@ void RendererFactory::CreateSwapChain()
 
 void RendererFactory::CreateRenderTargetViews()
 {
+	if (!m_SwapChain || !m_Device)
+	{
+		return;
+	}
+
 	if (!m_SwapChainRtvHeap)
 	{
 		D3D12_DESCRIPTOR_HEAP_DESC swapChainRtvHeapDesc = {};
@@ -220,6 +235,11 @@ void RendererFactory::CreateRenderTargetViews()
 
 void RendererFactory::CreateCommandObjects()
 {
+	if (!m_Device)
+	{
+		return;
+	}
+
 	for (UINT n = 0; n < FrameCount; n++)
 	{
 		HRESULT hr = m_Device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_CommandAllocators[n]));
@@ -246,6 +266,11 @@ void RendererFactory::CreateCommandObjects()
 
 void RendererFactory::CreateSyncObjects()
 {
+	if (!m_Device || !m_CommandQueue)
+	{
+		return;
+	}
+
 	HRESULT hr = m_Device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_Fence));
 	if (FAILED(hr))
 	{
@@ -268,7 +293,7 @@ void RendererFactory::CreateSyncObjects()
 
 bool RendererFactory::IsRHIValid() const
 {
-	return m_Device && m_CommandQueue && m_SwapChain && m_SwapChainRtvHeap &&
+	return m_Device && m_CommandQueue &&
 		m_CommandList && m_CommandAllocators[0] && m_Fence && m_FenceEvent;
 }
 
@@ -331,6 +356,94 @@ void RendererFactory::EndFrame()
 	m_CommandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
 }
 
+void RendererFactory::BeginFrameToTexture(ID3D12Resource* Target, D3D12_CPU_DESCRIPTOR_HANDLE Rtv)
+{
+	if (!Target || !m_CommandList || !m_CommandAllocators[m_OffscreenFrameIndex])
+	{
+		return;
+	}
+
+	HRESULT hr = m_CommandAllocators[m_OffscreenFrameIndex]->Reset();
+	if (FAILED(hr))
+	{
+		std::print("Fails to reset the offscreen command allocator in %s\n", __FUNCTION__);
+		return;
+	}
+
+	hr = m_CommandList->Reset(m_CommandAllocators[m_OffscreenFrameIndex].Get(), nullptr);
+	if (FAILED(hr))
+	{
+		std::print("Fails to reset the offscreen command list in %s\n", __FUNCTION__);
+		return;
+	}
+
+	D3D12_RESOURCE_BARRIER Barrier = {};
+	Barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	Barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+	Barrier.Transition.pResource = Target;
+	Barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+	Barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+	Barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	m_CommandList->ResourceBarrier(1, &Barrier);
+
+	m_CommandList->OMSetRenderTargets(1, &Rtv, FALSE, nullptr);
+
+	const D3D12_RESOURCE_DESC TargetDesc = Target->GetDesc();
+	D3D12_VIEWPORT Viewport = {};
+	Viewport.TopLeftX = 0.0f;
+	Viewport.TopLeftY = 0.0f;
+	Viewport.Width = static_cast<float>(TargetDesc.Width);
+	Viewport.Height = static_cast<float>(TargetDesc.Height);
+	Viewport.MinDepth = 0.0f;
+	Viewport.MaxDepth = 1.0f;
+	m_CommandList->RSSetViewports(1, &Viewport);
+
+	D3D12_RECT Scissor = {};
+	Scissor.left = 0;
+	Scissor.top = 0;
+	Scissor.right = static_cast<LONG>(TargetDesc.Width);
+	Scissor.bottom = static_cast<LONG>(TargetDesc.Height);
+	m_CommandList->RSSetScissorRects(1, &Scissor);
+
+	const float ClearColor[4] = { 0.05f, 0.05f, 0.05f, 1.0f };
+	m_CommandList->ClearRenderTargetView(Rtv, ClearColor, 0, nullptr);
+
+	m_OffscreenTarget = Target;
+}
+
+void RendererFactory::EndFrameToTexture()
+{
+	if (!m_CommandList)
+	{
+		return;
+	}
+
+	// Transition back to COMMON so D3D11 can open/consume the shared allocation.
+	if (m_OffscreenTarget)
+	{
+		D3D12_RESOURCE_BARRIER Barrier = {};
+		Barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+		Barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+		Barrier.Transition.pResource = m_OffscreenTarget;
+		Barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+		Barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+		Barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+		m_CommandList->ResourceBarrier(1, &Barrier);
+	}
+
+	HRESULT hr = m_CommandList->Close();
+	if (FAILED(hr))
+	{
+		return;
+	}
+
+	ID3D12CommandList* CommandLists[] = { m_CommandList.Get() };
+	m_CommandQueue->ExecuteCommandLists(_countof(CommandLists), CommandLists);
+
+	m_OffscreenTarget = nullptr;
+	m_OffscreenFrameIndex = (m_OffscreenFrameIndex + 1) % FrameCount;
+}
+
 void RendererFactory::PresentFrame()
 {
 	if (!m_SwapChain || !m_CommandQueue || !m_Fence)
@@ -353,6 +466,11 @@ void RendererFactory::PresentFrame()
 
 void RendererFactory::ResizeSwapChain()
 {
+	if (!m_SwapChain)
+	{
+		return;
+	}
+
 	WaitForGpu();
 
 	for (UINT n = 0; n < FrameCount; n++)

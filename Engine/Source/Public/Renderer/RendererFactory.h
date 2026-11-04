@@ -12,7 +12,7 @@ public:
 	RendererFactory();
 	~RendererFactory();
 
-	void Initialize();
+	void Initialize(const LUID* adapterLuid = nullptr);
 	void UnInitialize();
 
 	void SetVSyncEnabled(bool bEnabled);
@@ -30,6 +30,12 @@ public:
 	void BeginFrame();
 	void EndFrame();
 	void PresentFrame();
+
+	// Editor viewport output. These use the same command list/fence as the
+	// swapchain path but target a shared D3D12 texture instead of a back buffer.
+	void BeginFrameToTexture(ID3D12Resource* Target, D3D12_CPU_DESCRIPTOR_HANDLE Rtv);
+	void EndFrameToTexture();
+	bool HasSwapChain() const { return m_SwapChain != nullptr; }
 
 	// Per frame / resize.
 	void ResizeSwapChain();
@@ -71,6 +77,8 @@ protected:
 
 	// Synchronization objects.
 	UINT   m_FrameIndex = 0;
+	UINT   m_OffscreenFrameIndex = 0;
+	ID3D12Resource* m_OffscreenTarget = nullptr;
 	HANDLE m_FenceEvent = nullptr;
 	Microsoft::WRL::ComPtr<ID3D12Fence> m_Fence;
 	UINT64 m_FenceValues[FrameCount] = {};

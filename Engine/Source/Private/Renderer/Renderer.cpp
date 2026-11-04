@@ -15,7 +15,7 @@ Renderer::~Renderer()
 	UnInitialize();
 }
 
-void Renderer::Initialize(Window* window)
+void Renderer::Initialize(Window* window, bool bEnableImGui, uint32_t ViewportWidth, uint32_t ViewportHeight, const LUID* AdapterLuid)
 {
 	if (IsInitialized())
 	{
@@ -25,7 +25,8 @@ void Renderer::Initialize(Window* window)
 	m_RendererFactory = std::make_unique<RendererFactory>();
 	m_RendererFactory->SetWindow(window);
 
-	if (!InitializeRHI())
+	const bool bRhi = InitializeRHI(AdapterLuid);
+	if (!bRhi || (window && !m_RendererFactory->HasSwapChain()))
 	{
 		m_RendererFactory->UnInitialize();
 		m_RendererFactory.reset();
@@ -33,13 +34,17 @@ void Renderer::Initialize(Window* window)
 		return;
 	}
 
-	// The overlay borrows the window and the RHI's device/queue. It owns its own SRV heap.
-	if (window)
+	// The overlay borrows the RHI's device/queue and, in windowed mode, the
+	// native window. Headless/editor mode skips the GLFW backend and feeds ImGui
+	// the viewport size directly.
+	if (bEnableImGui)
 	{
 		ImGuiSpecification ImGuiSpec;
 		ImGuiSpec.bEnabledKeyboardControls = true;
 		ImGuiSpec.bShowDemoWindow = true;
-		ImGuiSpec.WindowHandle = window->GetNativeHandle();
+		ImGuiSpec.WindowHandle = window ? window->GetNativeHandle() : nullptr;
+		ImGuiSpec.ViewportWidth = ViewportWidth;
+		ImGuiSpec.ViewportHeight = ViewportHeight;
 		ImGuiSpec.Device = m_RendererFactory->GetDevice();
 		ImGuiSpec.CommandQueue = m_RendererFactory->GetCommandQueue();
 		ImGuiSpec.NumFramesInFlight = m_RendererFactory->GetFramesInFlight();
@@ -52,6 +57,9 @@ void Renderer::Initialize(Window* window)
 			std::print("[Renderer] Failed to initialize the ImGui overlay.\n");
 			m_ImGuiRenderer.reset();
 		}
+		else
+		{
+			}
 	}
 
 	bInitialize = true;
@@ -100,6 +108,30 @@ void Renderer::Present()
 	}
 }
 
+void Renderer::BeginRenderToTexture(ID3D12Resource* Target, D3D12_CPU_DESCRIPTOR_HANDLE Rtv)
+{
+	if (m_RendererFactory)
+	{
+		m_RendererFactory->BeginFrameToTexture(Target, Rtv);
+	}
+}
+
+void Renderer::EndRenderToTexture()
+{
+	if (m_RendererFactory)
+	{
+		m_RendererFactory->EndFrameToTexture();
+	}
+}
+
+void Renderer::WaitForGpu()
+{
+	if (m_RendererFactory)
+	{
+		m_RendererFactory->WaitForGpu();
+	}
+}
+
 void Renderer::RenderImGui()
 {
 	if (!m_ImGuiRenderer || !m_ImGuiRenderer->IsInitialized() || !m_RendererFactory)
@@ -112,8 +144,8 @@ void Renderer::RenderImGui()
 	m_ImGuiRenderer->EndFrame(m_RendererFactory->GetCommandList());
 }
 
-bool Renderer::InitializeRHI()
+bool Renderer::InitializeRHI(const LUID* AdapterLuid)
 {
-	m_RendererFactory->Initialize();
+	m_RendererFactory->Initialize(AdapterLuid);
 	return m_RendererFactory->IsRHIValid();
 }

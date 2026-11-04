@@ -6,6 +6,7 @@
 #include "Core/Runtime.h"
 
 #include <cstdio>
+#include <cstring>
 #include <iostream>
 #include <io.h>
 #include <fcntl.h>
@@ -41,7 +42,12 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	(void)nCmdShow;
 
 #if !defined(MORTARENGINE_SHIPPING)
-	SetupConsole();
+	// Editor mode is launched by the Avalonia editor as a headless child process.
+	// Do not allocate/attach a console window; the IPC pipe is the only channel.
+	if (lpCmdLine == nullptr || std::strstr(lpCmdLine, "--editor") == nullptr)
+	{
+		SetupConsole();
+	}
 #endif
 
 	void* PlatformData = static_cast<void*>(hInstance);

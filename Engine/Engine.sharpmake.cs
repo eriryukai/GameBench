@@ -53,6 +53,7 @@ namespace MortarEngine
                 conf.LibraryFiles.Add("Ole32.lib");    // COM (IFileDialog)
                 conf.LibraryFiles.Add("Shell32.lib");  // ShellExecute / SHGetKnownFolderPath
                 conf.LibraryFiles.Add("User32.lib");   // SendMessageTimeoutA
+                conf.LibraryFiles.Add("d3d11.lib");    // Shared keyed-mutex viewport textures
             }
 
             ConfigureGLFW(conf, target);

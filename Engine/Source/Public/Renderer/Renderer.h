@@ -2,6 +2,9 @@
 
 #pragma once
 
+#include <d3d12.h>
+
+#include <cstdint>
 #include <memory>
 
 class Window;
@@ -14,7 +17,7 @@ public:
 	Renderer();
 	~Renderer();
 
-	void Initialize(Window* window);
+	void Initialize(Window* window, bool bEnableImGui, uint32_t ViewportWidth, uint32_t ViewportHeight, const LUID* AdapterLuid = nullptr);
 	void UnInitialize();
 
 	bool IsInitialized() const { return bInitialize; }
@@ -24,12 +27,17 @@ public:
 	void EndRender();
 	void Present();
 
+	// Editor viewport output.
+	void BeginRenderToTexture(ID3D12Resource* Target, D3D12_CPU_DESCRIPTOR_HANDLE Rtv);
+	void EndRenderToTexture();
+	void WaitForGpu();
+
 	void RenderImGui();
 
 	RendererFactory* GetFactory() const { return m_RendererFactory.get(); }
 	ImGuiRenderer* GetImGuiRenderer() const { return m_ImGuiRenderer.get(); }
 protected:
-	bool InitializeRHI();
+	bool InitializeRHI(const LUID* AdapterLuid);
 
 private:
 	bool bInitialize = false;

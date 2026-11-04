@@ -16,6 +16,9 @@ struct ImGuiSpecification
 	bool bEnabledGamepadControls = false;
 	bool bShowDemoWindow = false;
 	void* WindowHandle = nullptr;
+	uint32_t ViewportWidth = 0;
+	uint32_t ViewportHeight = 0;
+	float DeltaTime = 1.0f / 60.0f;
 
 	// Renderer resources borrowed by this backend. Dear ImGui owns its own SRV heap.
 	ID3D12Device* Device = nullptr;
@@ -59,6 +62,7 @@ protected:
 protected:
 	ImGuiSpecification Specification;
 	bool bInitialized = false;
+	bool bGlfwInitialized = false;
 
 	static const UINT SrvHeapSize = 64;
 	Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> m_ImGuiSRVHeap;

@@ -21,6 +21,27 @@ public sealed class EditorDockFactory : Factory
         rootDock.IsCollapsable = false;
         rootDock.IsFocusableRoot = true;
 
+        var viewportDock = CreateDocumentDock();
+        viewportDock.Id = "ViewportDock";
+        viewportDock.Title = "Viewport";
+        viewportDock.IsCollapsable = false;
+        viewportDock.Proportion = 1;
+
+        var viewport = new ViewportDocument
+        {
+            Id = "Viewport",
+            Title = "Viewport",
+            CanClose = false,
+        };
+        viewport.Owner = viewportDock;
+
+        viewportDock.VisibleDockables = CreateList<IDockable>(viewport);
+        viewportDock.ActiveDockable = viewport;
+        viewportDock.Owner = rootDock;
+
+        rootDock.VisibleDockables = CreateList<IDockable>(viewportDock);
+        rootDock.ActiveDockable = viewportDock;
+
         _rootDock = rootDock;
 
         return rootDock;

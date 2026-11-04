@@ -53,7 +53,11 @@ bool ImGuiRenderer::UnInitialize()
 	}
 
 	ImGui_ImplDX12_Shutdown();
-	ImGui_ImplGlfw_Shutdown();
+	if (bGlfwInitialized)
+	{
+		ImGui_ImplGlfw_Shutdown();
+		bGlfwInitialized = false;
+	}
 	ImGui::DestroyContext();
 	DestroySrvHeap();
 
@@ -68,8 +72,23 @@ void ImGuiRenderer::BeginFrame()
 		return;
 	}
 
+	if (!bGlfwInitialized)
+	{
+		ImGuiIO& IO = ImGui::GetIO();
+		if (Specification.ViewportWidth > 0 && Specification.ViewportHeight > 0)
+		{
+			IO.DisplaySize = ImVec2(
+				static_cast<float>(Specification.ViewportWidth),
+				static_cast<float>(Specification.ViewportHeight));
+		}
+		IO.DeltaTime = Specification.DeltaTime;
+	}
+
 	ImGui_ImplDX12_NewFrame();
-	ImGui_ImplGlfw_NewFrame();
+	if (bGlfwInitialized)
+	{
+		ImGui_ImplGlfw_NewFrame();
+	}
 	ImGui::NewFrame();
 }
 
@@ -113,23 +132,32 @@ void ImGuiRenderer::SetupStyles()
 
 bool ImGuiRenderer::InitializeBackend()
 {
-	if (!Specification.WindowHandle || !Specification.Device || !Specification.CommandQueue)
+	if (!Specification.Device || !Specification.CommandQueue)
 	{
-		std::print("[ImGuiRenderer] Initialize failed: missing window or renderer resources.\n");
+		std::print("[ImGuiRenderer] Initialize failed: missing renderer resources.\n");
 		return false;
 	}
 
-	// GLFW owns the window, so the platform backend hooks GLFW's input callbacks and
-	// receives events through the engine's existing glfwPollEvents() pump.
-	if (!ImGui_ImplGlfw_InitForOther(static_cast<GLFWwindow*>(Specification.WindowHandle), true))
+	// Windowed mode uses GLFW for input and display size. Editor/headless mode
+	// has no platform window; ImGui is driven by DisplaySize/DeltaTime and the
+	// editor input bridge instead.
+	if (Specification.WindowHandle)
 	{
-		std::print("[ImGuiRenderer] ImGui_ImplGlfw_InitForOther failed.\n");
-		return false;
+		if (!ImGui_ImplGlfw_InitForOther(static_cast<GLFWwindow*>(Specification.WindowHandle), true))
+		{
+			std::print("[ImGuiRenderer] ImGui_ImplGlfw_InitForOther failed.\n");
+			return false;
+		}
+		bGlfwInitialized = true;
 	}
 
 	if (!CreateSrvHeap())
 	{
-		ImGui_ImplGlfw_Shutdown();
+		if (bGlfwInitialized)
+		{
+			ImGui_ImplGlfw_Shutdown();
+			bGlfwInitialized = false;
+		}
 		return false;
 	}
 
@@ -148,7 +176,11 @@ bool ImGuiRenderer::InitializeBackend()
 	{
 		std::print("[ImGuiRenderer] ImGui_ImplDX12_Init failed.\n");
 		DestroySrvHeap();
-		ImGui_ImplGlfw_Shutdown();
+		if (bGlfwInitialized)
+		{
+			ImGui_ImplGlfw_Shutdown();
+			bGlfwInitialized = false;
+		}
 		return false;
 	}
 

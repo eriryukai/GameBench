@@ -5,9 +5,11 @@
 #include "Core/LayerStack.h"
 #include "OS/Window/WindowTypes.h"
 
+#include <cstdint>
 #include <memory>
 #include <string>
 
+class EditorBridge;
 class Renderer;
 class Window;
 
@@ -16,6 +18,16 @@ struct ApplicationSpecification
 	WindowSpecification Window;
 	bool bEnabledImGui = false;
 	bool VSync = true;
+
+	// Editor mode is headless: no native window/swap chain. The renderer writes
+	// into a three-slot shared texture ring and publishes it over the named pipe.
+	bool bEditorMode = false;
+	std::string EditorPipeName;
+	uint32_t ViewportWidth = 1280;
+	uint32_t ViewportHeight = 720;
+	uint32_t TargetFps = 60;
+	bool bUseAdapterLuid = false;
+	uint64_t AdapterLuid = 0;
 };
 
 class Application
@@ -52,6 +64,7 @@ private:
 
 	std::unique_ptr<Renderer> m_Renderer;
 	std::unique_ptr<Window> m_Window;
+	std::unique_ptr<EditorBridge> m_EditorBridge;
 
 	std::string m_LastError;
 	bool m_Initialized = false;

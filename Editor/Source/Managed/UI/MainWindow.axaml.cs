@@ -4,7 +4,9 @@
 using System;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Media.Imaging;
+using MortarEngine.Editor.Managed.Docking;
 using MortarEngine.Editor.Managed.Styling;
 using MortarEngine.Editor.Managed.UI.Caption;
 
@@ -28,6 +30,7 @@ public sealed partial class MainWindow : Window
         _viewModel = new MainWindowViewModel(caption);
         DataContext = _viewModel;
 
+        DataTemplates.Add(new ViewportDocumentTemplate());
         InitializeComponent();
 
         _chromeRoot = this.FindControl<Border>("ChromeRoot");
@@ -75,5 +78,13 @@ public sealed partial class MainWindow : Window
         Bitmap? logo = EditorTheme.LoadBitmap("Editor/MortarEngine_IconAppLogo.png");
         if (logo != null)
             Icon = new WindowIcon(logo);
+    }
+
+    private sealed class ViewportDocumentTemplate : IDataTemplate
+    {
+        public Control? Build(object? param) =>
+            param is ViewportDocument document ? document.View : null;
+
+        public bool Match(object? data) => data is ViewportDocument;
     }
 }
