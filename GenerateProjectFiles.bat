@@ -46,7 +46,7 @@ if errorlevel 1 (
 )
 
 echo.
-echo [MortarEngine] Done. Open MortarEngine.sln to build.
+echo [MortarEngine] Done. Open MortarEngine.slnx to build.
 
 :end
 echo.

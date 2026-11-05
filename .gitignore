@@ -71,7 +71,7 @@ Testing/
 */Binaries
 */Intermediate
 
-// Visual Studio 2026
-*.vs
+# Visual Studio 2026
+.vs/
 *.sln
 *.slnx

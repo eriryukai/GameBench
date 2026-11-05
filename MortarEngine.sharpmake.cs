@@ -17,6 +17,7 @@ namespace MortarEngine
         {
             Name = "MortarEngine";
             IsFileNameToLower = false;
+            Format = SolutionFormat.Slnx;
 
             AddTargets(new MortarEngineTarget());
         }
